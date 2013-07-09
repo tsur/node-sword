@@ -1,0 +1,22 @@
+{
+    "name": "sword-engine",
+    "version": "0.0.1",
+    "description": "Sword Engine Addon for Node JS",
+    "main": "sword.js",
+    "private": false,
+    "gypfile": true,
+    "repository": 
+    {
+      "type": "git",
+      "url": "https://github.com/tsur/node.sword.git"
+    }
+    "devDependencies": 
+    {
+        "mocha": "1.9.0",
+        "should": "1.2.2"
+    },
+    "scripts": 
+    {
+        "test": "make test"
+    }
+}
