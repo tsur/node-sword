@@ -1,7 +1,6 @@
 Node-Sword
 ======================
 
-See the Node.js C++ [addons page](http://nodejs.org/docs/latest/api/addons.html) for details of the examples here.
 
 Install node-sword:
 
@@ -16,14 +15,65 @@ $ npm install node-sword
 ### Node v0.10+
 ### Unix based system
 
+#How to configure sword
 
 ```js
+
+sword = require('node-sword');
+
+sword.configure({
+
+    'base':__dirname+'/sword',/* default: system lookup(see note) */
+    'format':sword.FORMAT_RTF,/* default: sword.FORMAT_PLAIN */
+    'locale':__dirname+'/sword/locales.d'/* default: /usr/share/sword/locales.d */
+    
+});
+
+```
+#How to retrieve information
+
+
+```js
+
+sword = require('node-sword');
+
+sword.info('modules', function(modules){
+
+    console.log(modules);
+    
+});
+
+sword.info('locales', function(locales){
+
+    console.log(locales);
+    
+});
 
 ```
 
-Omission of the current isolate will only trigger a compile-time warning at this stage but addon authors wishing to remove those warnings and remain backward-compatible with v0.10 and prior may need to get creative with macros:
+#How to query sword modules
+
 
 ```js
+
+sword = require('node-sword');
+
+sword.query('KJV', function(err, module){
+
+    if(err) return console.log('module not found');
+    
+    //Do your work with module
+    module.read('Genesis 1:1', function(result){
+    
+        console.log(result);
+    });
+    
+    module.search('God', function(result){
+    
+        console.log(result);
+    });
+    
+});
 
 ```
 
