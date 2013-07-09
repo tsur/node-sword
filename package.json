@@ -1,14 +1,26 @@
 {
-    "name": "sword-engine",
-    "version": "0.0.1",
-    "description": "Sword Engine Addon for Node JS",
+    "author": 
+    {
+        "name": "Tsur",
+        "email": "prucheta@gmail.com",
+        "url": "https://www.scripturesos.com/"
+    },
+    "name": "node-sword",
+    "version": "0.0.1-alpha",
+    "description": "Sword Engine(Crosswire) for NodeJS (C++ Addon)",
+    "keywords": [
+        "bible",
+        "node",
+        "c++",
+        "sword",
+        "crosswire"
+    ],
     "main": "build/Release/sword.node",
-    "private": false,
     "gypfile": true,
     "repository": 
     {
       "type": "git",
-      "url": "https://github.com/tsur/node.sword.git"
+      "url": "https://github.com/tsur/node-sword.git"
     },
     "devDependencies": 
     {

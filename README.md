@@ -1,19 +1,16 @@
 Node-Sword
 ======================
 
-
-Install node-sword:
+Installing node-sword:
 
 ```sh
 $ npm install node-sword
 ```
 
-**See the [v0.11](https://github.com/rvagg/node-addon-examples/tree/v0.11/) branch for updated examples applicable to Node v0.11 and above.**
-
 ## Compatibility notes
 
-### Node v0.10+
-### Unix based system
+# Node v0.10+
+# Unix based system
 
 #How to configure sword
 
@@ -23,13 +20,33 @@ sword = require('node-sword');
 
 sword.configure({
 
-    'base':__dirname+'/sword',/* default: system lookup(see note) */
+    'base':__dirname+'/sword',/* default: system lookup (See note *) */
     'format':sword.FORMAT_RTF,/* default: sword.FORMAT_PLAIN */
     'locale':__dirname+'/sword/locales.d'/* default: /usr/share/sword/locales.d */
     
 });
 
 ```
+
+Note *
+ 
+It looks for a configuration file in some of the following directories:
+
+    1) /etc/sword.conf
+    2) /usr/local/etc/sword.conf
+    3) $HOME/.sword/
+    4) $HOME/sword/
+    5) ./
+    6) $SWORD_PATH
+
+The configuration file must contain valuable information about the location of all modules
+
+In all cases, except first and second one, sword engine looks for some file with the name  "sword.conf", "mods.conf", or the files in the directory "mods.d". For instance, in the third case, it would look for: $HOME/.sword/sword.conf, $HOME/.sword/mods.conf, $HOME/.sword/mods.d/*.conf
+
+More information on: http://www.crosswire.org/wiki/Main_Page
+    
+End Note *
+
 #How to retrieve information
 
 
