@@ -9,8 +9,8 @@ $ npm install node-sword
 
 ## Compatibility notes
 
-# Node v0.10+
-# Unix based system
+- Node v0.10+
+- Unix based systems
 
 #How to configure sword
 
