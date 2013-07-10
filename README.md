@@ -1,6 +1,8 @@
 Node-Sword
 ======================
 
+Note: Node-sword is a port for scripturesOS.
+
 Installing node-sword:
 
 ```sh
