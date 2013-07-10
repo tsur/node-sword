@@ -22,9 +22,9 @@ sword = require('node-sword');
 
 sword.configure({
 
-    'base':__dirname+'/sword',/* default: system lookup (See note *) */
-    'format':sword.FORMAT_RTF,/* default: sword.FORMAT_PLAIN */
-    'locale':__dirname+'/sword/locales.d'/* default: /usr/share/sword/locales.d */
+    'base'   : __dirname+'/sword',            /* default: system lookup (See note * below) */
+    'format' : sword.FORMAT_RTF,              /* default: sword.FORMAT_PLAIN */
+    'locale' : __dirname+'/sword/locales.d'   /* default: /usr/share/sword/locales.d */
     
 });
 
