@@ -2,13 +2,14 @@
 #include <iostream>
 #include <string>
 
+//Sword dependences
 #include <swmgr.h>
 #include <swmodule.h>
 #include <markupfiltmgr.h>
 #include <localemgr.h>
 
+//Local dependences
 #include "swordHandler.h"
-#include "swordModule.h"
 
 using namespace v8;
 using namespace sword;
@@ -23,14 +24,10 @@ void SwordHandler::Init(Handle<Object> exports)
     exports->Set(String::NewSymbol("configure"),
       FunctionTemplate::New(Configure)->GetFunction());
       
-    exports->Set(String::NewSymbol("query"),
-      FunctionTemplate::New(Query)->GetFunction());
-      
     exports->Set(String::NewSymbol("info"),
       FunctionTemplate::New(Info)->GetFunction());
     
     //Constantes
-    
     exports->Set(String::NewSymbol("FORMAT_PLAIN"),
       Number::New(FMT_PLAIN));
       
@@ -58,7 +55,6 @@ void SwordHandler::Init(Handle<Object> exports)
     exports->Set(String::NewSymbol("FORMAT_TEI"),
       Number::New(FMT_TEI));
       
-    
     exports->Set(String::NewSymbol("FILTER_TRANSLITERATION"),
       Number::New(1));
       
@@ -130,27 +126,31 @@ Handle<Value> SwordHandler::Configure(const Arguments& args)
             mfm = new MarkupFilterMgr(FMT_PLAIN);
         }
         
-        if( options->Has(String::NewSymbol("base")) && 
-            options->Get(String::NewSymbol("base"))->IsString())
+        if( options->Has(String::NewSymbol("modules")) && 
+            options->Get(String::NewSymbol("modules"))->IsString())
         {
-            String::AsciiValue configPathAV(options->Get(String::NewSymbol("base")));
+            String::AsciiValue configPathAV(options->Get(String::NewSymbol("modules")));
             std::string configPath = std::string(*configPathAV);
 
             SwordHandler::manager = new SWMgr(configPath.c_str(), true, mfm, true, false);
+
+            // SwordHandler::manager = new SWMgr(mfm);
+            // manager->loadConfigDir(configPath.c_str());
         }
         else
         {
             SwordHandler::manager = new SWMgr(mfm);
         }
 
-        if( options->Has(String::NewSymbol("locale")) && 
-            options->Get(String::NewSymbol("locale"))->IsString())
+        if( options->Has(String::NewSymbol("locales")) && 
+            options->Get(String::NewSymbol("locales"))->IsString())
         {
-            String::AsciiValue localePathAV(options->Get(String::NewSymbol("locale")));
+            String::AsciiValue localePathAV(options->Get(String::NewSymbol("locales")));
             std::string localePath = std::string(*localePathAV);
 
-            LocaleMgr* local = new LocaleMgr::LocaleMgr(localePath.c_str());
-            LocaleMgr::setSystemLocaleMgr(local);
+            // LocaleMgr* local = LocaleMgr::getSystemLocaleMgr();
+            // LocaleMgr* local = new LocaleMgr::LocaleMgr(localePath.c_str());
+            LocaleMgr::setSystemLocaleMgr(new LocaleMgr(localePath.c_str()));
         }
 
         return scope.Close(Undefined());
@@ -163,67 +163,71 @@ Handle<Value> SwordHandler::Configure(const Arguments& args)
     }
 }
 
-Handle<Value> SwordHandler::Query(const Arguments& args) 
-{
-    HandleScope scope;
+// Handle<Value> SwordHandler::Query(const Arguments& args) 
+// {
+//     HandleScope scope;
 
-    SWModule *target;
+//     SWModule *target;
     
-    v8::String::AsciiValue av(args[0]->ToString());
-    string module_name = std::string(*av);
+//     v8::String::AsciiValue av(args[0]->ToString());
+//     string module_name = std::string(*av);
         
-    target = manager->getModule(module_name.c_str());
+//     target = manager->getModule(module_name.c_str());
     
-    //Callback
-    Local<Function> cb = Local<Function>::Cast(args[1]);
-    const unsigned argc = 2;
-    Local<Value> argv[argc];
-    //Error module not found
-    if(!target) 
-    {
-         argv[0] = Local<Value>::New(Boolean::New(true));
-         /*
-         Local<Object> err = Object::New();
-         err->Set(String::NewSymbol("msg"), String::NewSymbol("Not found"));
-         argv[0] = Local<Value>::New(err);
-         */
-         argv[1] = Local<Value>::New(Undefined());
-    }
-    else
-    {
-        //target->setKey("gen 1:19");
+//     //Callback
+//     Local<Function> cb = Local<Function>::Cast(args[1]);
+//     const unsigned argc = 2;
+//     Local<Value> argv[argc];
+//     //Error module not found
+//     if(!target) 
+//     {
+//          argv[0] = Local<Value>::New(Boolean::New(true));
+//          /*
+//          Local<Object> err = Object::New();
+//          err->Set(String::NewSymbol("msg"), String::NewSymbol("Not found"));
+//          argv[0] = Local<Value>::New(err);
+//          */
+//          argv[1] = Local<Value>::New(Undefined());
+//     }
+//     else
+//     {
+//         //target->setKey("gen 1:19");
         
-        argv[0] = Local<Value>::New(Null());
-        //argv[1] = Local<Value>::New(String::New(target->RenderText()));
+//         argv[0] = Local<Value>::New(Null());
+//         //argv[1] = Local<Value>::New(String::New(target->RenderText()));
 
-        //SwordModule* module = new SwordModule(target);
-        SwordModule::target = target;
+//         SwordModule* swordModule = new SwordModule(target);
+//         swordModule->Wrap(args.This());
+//         // SwordModule::target = target;
         
-        //module->make();
-        /*
-        // Prepare constructor template
-        Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
-        tpl->SetClassName(String::NewSymbol("MyObject"));
-        tpl->InstanceTemplate()->SetInternalFieldCount(1);
-        // Prototype
-        tpl->PrototypeTemplate()->Set(String::NewSymbol("plusOne"),
-          FunctionTemplate::New(PlusOne)->GetFunction());
+//         //module->make();
+//         /*
+//         // Prepare constructor template
+//         Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
+//         tpl->SetClassName(String::NewSymbol("MyObject"));
+//         tpl->InstanceTemplate()->SetInternalFieldCount(1);
+//         // Prototype
+//         tpl->PrototypeTemplate()->Set(String::NewSymbol("plusOne"),
+//           FunctionTemplate::New(PlusOne)->GetFunction());
 
-        Persistent<Function> constructor = Persistent<Function>::New(tpl->GetFunction());
-        target->Set(String::NewSymbol("MyObject"), constructor);
-        */
+//         Persistent<Function> constructor = Persistent<Function>::New(tpl->GetFunction());
+//         target->Set(String::NewSymbol("MyObject"), constructor);
+//         */
 
-        argv[1] = Local<Value>::New(SwordModule::make());
-    }
 
-    cb->Call(Context::GetCurrent()->Global(), argc, argv);
 
-    return scope.Close(Undefined());
+//         argv[1] = Local<Value>::New(swordModule->make());
+//         // argv[1] = Local<Value>::New(swordModule->make());
+//     }
+
+//     cb->Call(Context::GetCurrent()->Global(), argc, argv);
+
+//     return scope.Close(args.This());
   
-    //v8::String::AsciiValue av(args[1]->ToString());
-    //string key = std::string(*av);
+//     //v8::String::AsciiValue av(args[1]->ToString());
+//     //string key = std::string(*av);
 
-}
+// }
 
 Handle<Value> SwordHandler::Info(const Arguments& args) 
 {
@@ -270,10 +274,10 @@ Handle<Value> SwordHandler::Info(const Arguments& args)
             
             Local<Object> obj = Object::New();
             
-            obj->Set(String::NewSymbol("category"), String::NewSymbol(target->Type()));
-            obj->Set(String::NewSymbol("name"), String::NewSymbol(target->Name()));
-            obj->Set(String::NewSymbol("description"), String::NewSymbol(target->Description()));
-            obj->Set(String::NewSymbol("language"), String::NewSymbol(target->Lang()));
+            obj->Set(String::NewSymbol("category"), String::NewSymbol(target->getType()));
+            obj->Set(String::NewSymbol("name"), String::NewSymbol(target->getName()));
+            obj->Set(String::NewSymbol("description"), String::NewSymbol(target->getDescription()));
+            obj->Set(String::NewSymbol("language"), String::NewSymbol(target->getLanguage()));
             
             /*
             const char* dir = target->Direction() + "";

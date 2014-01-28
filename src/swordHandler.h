@@ -2,6 +2,7 @@
 #define SWORDHANDLER_H
 
 #include <node.h>
+//Sword dependences
 #include <swmgr.h>
 
 class SwordHandler //: public node::ObjectWrap 
@@ -16,7 +17,6 @@ class SwordHandler //: public node::ObjectWrap
     ~SwordHandler();
 
     static v8::Handle<v8::Value> Configure(const v8::Arguments& args);
-    static v8::Handle<v8::Value> Query(const v8::Arguments& args);
     static v8::Handle<v8::Value> Info(const v8::Arguments& args);
 };
 

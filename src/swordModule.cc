@@ -5,9 +5,7 @@
 //#include <stdlib.h>
 #include <regex.h> // GNU
 
-//#include <swmgr.h>
-//#include <markupfiltmgr.h>
-#include <swmodule.h>
+//Sword dependences
 #include <versekey.h>
 #include <localemgr.h>
 
@@ -26,28 +24,88 @@ using namespace v8;
 using namespace sword;
 using namespace std;
 
-
 //Cosntructor
+Persistent<Function> SwordModule::constructor;
+
 SwordModule::SwordModule(){};
+
+SwordModule::SwordModule(SWModule *target)
+{
+    module = target;
+};
 
 //Destructor
 SwordModule::~SwordModule() {};
 
-SWModule* SwordModule::target = NULL;
+void SwordModule::Init(Handle<Object> exports) {
+  // Prepare constructor template
+  Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
+  tpl->SetClassName(String::NewSymbol("SwordModule"));
+  tpl->InstanceTemplate()->SetInternalFieldCount(1);
+  // Prototype
+  tpl->PrototypeTemplate()->Set(String::NewSymbol("read"),
+      FunctionTemplate::New(Read)->GetFunction());
+  tpl->PrototypeTemplate()->Set(String::NewSymbol("search"),
+      FunctionTemplate::New(Search)->GetFunction());
 
-Local<Object> SwordModule::make()
+  constructor = Persistent<Function>::New(tpl->GetFunction());
+  exports->Set(String::NewSymbol("module"), constructor);
+}
+
+Handle<Value> SwordModule::New(const Arguments& args) 
 {
-    Local<Object> obj = Object::New();
-    //obj->Set(String::NewSymbol("msg"), String::NewSymbol("Not found"));
-    obj->Set(String::NewSymbol("read"), FunctionTemplate::New(Read)->GetFunction());
-    obj->Set(String::NewSymbol("search"), FunctionTemplate::New(Search)->GetFunction());
+  HandleScope scope;
+
+  if (args.IsConstructCall()) 
+  {
     
-    return obj;
+    if(args[0]->IsUndefined())
+    {
+        //raise exception
+        ThrowException(Exception::TypeError(String::New("module not defined")));
+        return scope.Close(Undefined());
+    }
+
+    if(!args[0]->IsString())
+    {
+        //raise exception
+        ThrowException(Exception::TypeError(String::New("module must be a string")));
+        return scope.Close(Undefined());
+    }
+    
+    v8::String::AsciiValue av(args[0]->ToString());
+    string module_name = std::string(*av);
+
+    SWModule *mod;
+    mod = SwordHandler::manager->getModule(module_name.c_str());
+
+    if(!mod) 
+    {
+        string error = "module " + module_name + " is not installed";
+        ThrowException(Exception::TypeError(String::New(error.c_str())));
+        return scope.Close(Undefined());
+    }
+
+    SwordModule* obj = new SwordModule(mod);
+
+    obj->Wrap(args.This());
+
+    return args.This();
+
+  } 
+  else 
+  {
+    // Invoked as plain function `MyObject(...)`, turn into construct call.
+    const int argc = 1;
+    Local<Value> argv[argc] = { args[0] };
+    return scope.Close(constructor->NewInstance(argc, argv));
+  }
 }
 
 Handle<Value> SwordModule::Read(const Arguments& args) 
 {
     HandleScope scope;
+    SwordModule* obj = node::ObjectWrap::Unwrap<SwordModule>(args.This());
 
     if(args.Length() == 2)
     {
@@ -57,18 +115,18 @@ Handle<Value> SwordModule::Read(const Arguments& args)
             string key = std::string(*av);
             
             VerseKey vk;
-            ListKey listkey = vk.ParseVerseList(key.c_str(), vk, true);
-            listkey.Persist(true);
+            ListKey listkey = vk.parseVerseList(key.c_str(), vk, true);
+            listkey.setPersist(true);
             
             string output = "";
             
-            target->setKey(listkey);
+            obj->module->setKey(listkey);
             
-            for((*target) = TOP; !target->Error(); (*target)++) 
+            for((*obj->module) = TOP; !obj->module->popError(); (*obj->module)++) 
             {
-                output += target->getKeyText();
+                output += obj->module->getKeyText();
                 output += " ";
-                output += target->RenderText();
+                output += obj->module->renderText();
                 output += " ";
             }
                 
@@ -232,20 +290,20 @@ Handle<Value> SwordModule::Read(const Arguments& args)
             const unsigned argc = 1;
             Local<Value> argv[argc];
             
-            //if(!strcmp(target->Type(), "Lexicons / Dictionaries")) 
+            //if(!strcmp(obj->module->Type(), "Lexicons / Dictionaries")) 
 
-            target->AddRenderFilter(ffilter);
+            obj->module->addRenderFilter(ffilter);
             
-            ListKey listkey = vk.ParseVerseList(key.c_str(), vk, true);
-            listkey.Persist(true);
+            ListKey listkey = vk.parseVerseList(key.c_str(), vk, true);
+            listkey.setPersist(true);
             
             string output = "";
             
-            target->setKey(listkey);
+            obj->module->setKey(listkey);
             
-            for((*target) = TOP; maxverses && !target->Error(); (*target)++) 
+            for((*obj->module) = TOP; maxverses && !obj->module->popError(); (*obj->module)++) 
             { 
-                output += target->RenderText();
+                output += obj->module->renderText();
                 maxverses--;
             }
             
@@ -272,15 +330,20 @@ Handle<Value> SwordModule::Read(const Arguments& args)
 Handle<Value> SwordModule::Search(const Arguments& args) 
 {
     HandleScope scope;
-    
+    SwordModule* obj = node::ObjectWrap::Unwrap<SwordModule>(args.This());
+
     if(args.Length() == 2)
     {
         if(args[0]->IsString() && args[1]->IsFunction())
         {
             v8::String::AsciiValue av(args[0]->ToString());
             string search = std::string(*av);
+
+            // cout << "aqui1" << endl;
             
-            ListKey result = target->search(search.c_str(), -1, REG_ICASE);
+            ListKey result = obj->module->search(search.c_str(), -1, REG_ICASE);
+
+            // cout << "aqui2" << endl;
 
             result.sort();
             
@@ -288,7 +351,7 @@ Handle<Value> SwordModule::Search(const Arguments& args)
             const unsigned argc = 1;
             Local<Value> argv[argc];
             
-            if(!result.Count())
+            if(!result.getCount())
             {
                 argv[0] = Array::New();
             
@@ -296,14 +359,14 @@ Handle<Value> SwordModule::Search(const Arguments& args)
                 return scope.Close(Undefined());
             }
             
-            Local<Array> results = Array::New(result.Count());
+            Local<Array> results = Array::New(result.getCount());
             
             int ac = 0;
             
-            while(!result.Error()) 
+            while(!result.popError()) 
             {
                 results->Set(ac, String::New((const char*)result));
-                //cout << ac << (const char*)result << endl;
+                // cout << ac << (const char*)result << endl;
                 ac++;
                 result++;
             }
@@ -364,14 +427,14 @@ Handle<Value> SwordModule::Search(const Arguments& args)
             
             if(!iscope.empty())
             {
-                ListKey scopeList = vk.ParseVerseList(iscope.c_str(),"", true);
+                ListKey scopeList = vk.parseVerseList(iscope.c_str(),"", true);
                 //scopeList.Persist(1);
                 SWKey* scope = &scopeList;
-                result = target->search(search.c_str(), type, REG_ICASE, scope);      
+                result = obj->module->search(search.c_str(), type, REG_ICASE, scope);      
             }
             else
             {
-                result = target->search(search.c_str(), type, REG_ICASE);
+                result = obj->module->search(search.c_str(), type, REG_ICASE);
             }
             
             result.sort();
@@ -380,7 +443,7 @@ Handle<Value> SwordModule::Search(const Arguments& args)
             const unsigned argc = 1;
             Local<Value> argv[argc];
             
-            if(!result.Count())
+            if(!result.getCount())
             {
                 argv[0] = Array::New();
             
@@ -388,11 +451,11 @@ Handle<Value> SwordModule::Search(const Arguments& args)
                 return scope.Close(Undefined());
             }
             
-            Local<Array> results = Array::New(result.Count());
+            Local<Array> results = Array::New(result.getCount());
             
             int ac = 0;
             
-            while(!result.Error()) 
+            while(!result.popError()) 
             {
                 results->Set(ac, String::New((const char*)result));
                 //cout << ac << (const char*)result << endl;

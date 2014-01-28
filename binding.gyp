@@ -8,5 +8,3 @@
       'libraries': ["<!(pkg-config --libs sword)"]
   }]
 }
-
-

@@ -2,21 +2,28 @@
 #define SWORDMODULE_H
 
 #include <node.h>
-#include <swmgr.h>
 #include <swmodule.h>
 
-class SwordModule //: public node::ObjectWrap 
+using namespace node;
+
+class SwordModule: public node::ObjectWrap 
 {
 
     public:
-        SwordModule();
-        //SwordModule(sword::SWModule* module);
+    	static void Init(v8::Handle<v8::Object> exports);
+
+    	SwordModule();
+        SwordModule(sword::SWModule *target);
         ~SwordModule();
-        static sword::SWModule* target;
-        static v8::Local<v8::Object> make();
+
     private:
+        
+        static v8::Handle<v8::Value> New(const v8::Arguments& args);
         static v8::Handle<v8::Value> Read(const v8::Arguments& args);
         static v8::Handle<v8::Value> Search(const v8::Arguments& args);
+        static v8::Persistent<v8::Function> constructor;
+
+        sword::SWModule *module;
 };
 
 #endif

@@ -6,7 +6,7 @@
         "url": "https://www.scripturesos.com/"
     },
     "name": "node-sword",
-    "version": "0.0.2-alpha",
+    "version": "0.0.1-alpha",
     "description": "Sword Engine(Crosswire) for NodeJS (C++ Addon)",
     "keywords": [
         "bible",
@@ -15,7 +15,8 @@
         "sword",
         "crosswire"
     ],
-    "main": "bin/sword.node",
+    "main": "build/Release/sword.node",
+    "gypfile": true,
     "repository": 
     {
       "type": "git",
@@ -28,6 +29,7 @@
     },
     "scripts": 
     {
+        "install":"node-gyp configure build",
         "test": "make test"
     }
 }
