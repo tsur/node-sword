@@ -1,3 +1,6 @@
+// Comment this line to disable debug output
+#define DEBUG
+
 #include <node.h>
 #include <string>
 #include <iostream>
@@ -17,6 +20,8 @@
 #include <unicodertf.h>
 #include <latin1utf8.h>
 
+//Local dependences
+#include "macros.h"
 #include "swordModule.h"
 #include "swordHandler.h"
 
@@ -102,43 +107,86 @@ Handle<Value> SwordModule::New(const Arguments& args)
   }
 }
 
+
+
+// if(args[0]->IsString() && args[1]->IsFunction())
+//         {
+//             const unsigned argc = 1;
+//             Local<Value> argv[argc];
+            
+//             argv[0] = Local<Value>::New(String::New(output.c_str()));
+//             cb->Call(Context::GetCurrent()->Global(), argc, argv);
+//         }
+void SwordModule::Work_BeginRead(Baton* baton) 
+{
+    int status = uv_queue_work(uv_default_loop(),
+        &baton->request, Work_Read, (uv_after_work_cb)Work_AfterRead);
+    assert(status == 0);
+}
+
+void SwordModule::Work_Read(uv_work_t* req)
+{
+    ReadBaton* baton = static_cast<ReadBaton*>(req->data);
+    SwordModule* me = baton->obj;
+
+    VerseKey vk;
+    ListKey listkey = vk.parseVerseList(baton->key.c_str(), vk, true);
+    listkey.setPersist(true);
+    
+    std::string output = "";
+    
+    me->module->setKey(listkey);
+    
+    for((*me->module) = TOP; !me->module->popError(); (*me->module)++) 
+    {
+        output += me->module->getKeyText();
+        output += " ";
+        output += me->module->renderText();
+        output += " ";
+    }
+
+    baton->output = output;
+}
+
+void SwordModule::Work_AfterRead(uv_work_t* req)
+{
+    ReadBaton* baton = static_cast<ReadBaton*>(req->data);
+
+    // Local<Value> argv[1];
+    // argv[0] = Local<Value>::New(String::New(baton->output.c_str()));
+
+    // TRY_CATCH_CALL(Context::GetCurrent()->Global(), baton->callback, 1, argv);
+
+    Local<Value> argv[1];
+    
+    argv[0] = Local<Value>::New(String::New(baton->output.c_str()));
+    baton->callback->Call(Context::GetCurrent()->Global(), 1, argv);
+
+    delete baton;
+}
+
 Handle<Value> SwordModule::Read(const Arguments& args) 
 {
     HandleScope scope;
-    SwordModule* obj = node::ObjectWrap::Unwrap<SwordModule>(args.This());
+    SwordModule* me = node::ObjectWrap::Unwrap<SwordModule>(args.This());
 
     if(args.Length() == 2)
     {
-        if(args[0]->IsString() && args[1]->IsFunction())
-        {
-            v8::String::AsciiValue av(args[0]->ToString());
-            string key = std::string(*av);
-            
-            VerseKey vk;
-            ListKey listkey = vk.parseVerseList(key.c_str(), vk, true);
-            listkey.setPersist(true);
-            
-            string output = "";
-            
-            obj->module->setKey(listkey);
-            
-            for((*obj->module) = TOP; !obj->module->popError(); (*obj->module)++) 
-            {
-                output += obj->module->getKeyText();
-                output += " ";
-                output += obj->module->renderText();
-                output += " ";
-            }
-                
-            Local<Function> cb = Local<Function>::Cast(args[1]);
-            const unsigned argc = 1;
-            Local<Value> argv[argc];
-            
-            argv[0] = Local<Value>::New(String::New(output.c_str()));
-            cb->Call(Context::GetCurrent()->Global(), argc, argv);
-        }
-        
-        return scope.Close(Undefined());
+        REQUIRE_ARGUMENT_STRING(0, key);
+        // std::string key = std::string(*av);
+
+        REQUIRE_ARGUMENT_FUNCTION(1, callback);
+
+        // Start reading the key.
+        ReadBaton* baton = new ReadBaton(me, callback, *key);
+        Work_BeginRead(baton);
+
+        #ifdef DEBUG
+        // Only gets compiled if DEBUG is defined.
+        cout << "Reading" << endl;
+        #endif
+
+        return args.This();
     }
     
     if(args.Length() == 3)
@@ -292,18 +340,18 @@ Handle<Value> SwordModule::Read(const Arguments& args)
             
             //if(!strcmp(obj->module->Type(), "Lexicons / Dictionaries")) 
 
-            obj->module->addRenderFilter(ffilter);
+            me->module->addRenderFilter(ffilter);
             
             ListKey listkey = vk.parseVerseList(key.c_str(), vk, true);
             listkey.setPersist(true);
             
             string output = "";
             
-            obj->module->setKey(listkey);
+            me->module->setKey(listkey);
             
-            for((*obj->module) = TOP; maxverses && !obj->module->popError(); (*obj->module)++) 
+            for((*me->module) = TOP; maxverses && !me->module->popError(); (*me->module)++) 
             { 
-                output += obj->module->renderText();
+                output += me->module->renderText();
                 maxverses--;
             }
             

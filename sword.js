@@ -23,7 +23,7 @@ var SWModule = sword.module;
 
 try
 {
-    var bible_kjv       = new sword.module('KJV');
+    // var bible_kjv       = new sword.module('KJV');
     var bible_chincsv   = new SWModule('ChiNCVs');
 
     // bible_kjv.read('Genesis 1:1', function(result){
@@ -31,10 +31,10 @@ try
     //     console.log(result);
     // });
 
-    bible_kjv.search('God', function(result){
+    // bible_kjv.search('God', function(result){
     
-        console.log(result);
-    });
+    //     console.log(result);
+    // });
 
     bible_chincsv.read('Genesis 1:1', function(result){
     
