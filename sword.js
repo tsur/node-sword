@@ -23,13 +23,8 @@ var SWModule = sword.module;
 
 try
 {
-    // var bible_kjv       = new sword.module('KJV');
+    var bible_kjv       = new sword.module('KJV');
     var bible_chincsv   = new SWModule('ChiNCVs');
-
-    // bible_kjv.read('Genesis 1:1', function(result){
-    
-    //     console.log(result);
-    // });
 
     // bible_kjv.search('God', function(result){
     
@@ -41,10 +36,15 @@ try
         console.log(result);
     });
 
-    // bible_kjv.read('Genesis 1:2', function(result){
+    bible_kjv.read('Genesis 1:1', function(result){
     
-    //     console.log(result);
-    // });
+        console.log(result);
+    });
+
+    bible_kjv.read('Judges 1:1', {keys:true, locale:"fi"}, function(result){
+    
+        console.log(result);
+    });
 // setTimeout(function(){
 
 //     bible_kjv.search('God', function(result){

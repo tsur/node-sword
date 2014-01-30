@@ -126,64 +126,181 @@ void SwordModule::Work_BeginRead(Baton* baton)
 
 void SwordModule::Work_Read(uv_work_t* req)
 {
+    //get mutex here
+    
     ReadBaton* baton = static_cast<ReadBaton*>(req->data);
     SwordModule* me = baton->obj;
-
     VerseKey vk;
-    ListKey listkey = vk.parseVerseList(baton->key.c_str(), vk, true);
-    listkey.setPersist(true);
-    
+    ListKey listkey;
     std::string output = "";
-    
-    me->module->setKey(listkey);
-    
-    for((*me->module) = TOP; !me->module->popError(); (*me->module)++) 
+
+    if(baton->options != NULL)
     {
-        output += me->module->getKeyText();
-        output += " ";
-        output += me->module->renderText();
-        output += " ";
+        #ifdef DEBUG
+        cout << "Options defined" << endl;
+        #endif
+
+        //Format
+        SWFilter* format = 0;
+        if(baton->options->format == FMT_PLAIN)
+            format = new ThMLPlain();
+        else if(baton->options->format == FMT_HTML)
+            format = new ThMLHTML();
+        else if(baton->options->format == FMT_GBF)
+            format = new ThMLGBF();
+        else if(baton->options->format == FMT_RTF)
+            format = new ThMLRTF();
+
+        if(format != NULL)
+        {
+            #ifdef DEBUG
+            cout << "format defined" << endl;
+            #endif
+
+            me->module->addRenderFilter(format);
+        }
+
+        //Locale
+        if(!baton->options->locale.empty()) 
+        {
+            #ifdef DEBUG
+            cout << "locale defined" << endl;
+            #endif
+
+            vk.setLocale(baton->options->locale.c_str());
+            // LocaleMgr::getSystemLocaleMgr()->setDefaultLocaleName(baton->options->locale.c_str());
+        }
+
+        //Filters
+        if(baton->options->filters & 1)
+            SwordHandler::manager->setGlobalOption("Transliteration","Latin");
+        else
+            SwordHandler::manager->setGlobalOption("Transliteration","Off");
+        if(baton->options->filters & 2)
+            SwordHandler::manager->setGlobalOption("Headings","On");
+        else
+            SwordHandler::manager->setGlobalOption("Headings","Off");    
+        if(baton->options->filters & 4)
+            SwordHandler::manager->setGlobalOption("Footnotes","On");
+        else
+            SwordHandler::manager->setGlobalOption("Footnotes","Off");
+        if(baton->options->filters & 8)
+            SwordHandler::manager->setGlobalOption("Cross-references","On");
+        else
+            SwordHandler::manager->setGlobalOption("Cross-references","Off");
+        if(baton->options->filters & 16)
+            SwordHandler::manager->setGlobalOption("Words of Christ in Red","On");
+        else
+            SwordHandler::manager->setGlobalOption("Words of Christ in Red","Off");
+        if(baton->options->filters & 32)
+            SwordHandler::manager->setGlobalOption("Strong's Numbers","On");
+        else
+            SwordHandler::manager->setGlobalOption("Strong's Numbers","Off");
+        if(baton->options->filters & 64)
+            SwordHandler::manager->setGlobalOption("Morphological Tags","On");
+        else
+            SwordHandler::manager->setGlobalOption("Morphological Tags","Off");
+
+        //Maxverses
+        int maxverses = baton->options->maxverses;
+
+        #ifdef DEBUG
+        cout << "Maxverses init: " << maxverses << endl;
+        #endif
+
+        listkey = vk.parseVerseList(baton->key.c_str(), vk, true);
+        listkey.setPersist(true);
+
+        me->module->setKey(listkey);
+
+        for((*me->module) = TOP; maxverses && !me->module->popError(); (*me->module)++) 
+        { 
+            #ifdef DEBUG
+            cout << "Maxverses loop: " << maxverses << endl;
+            #endif
+
+            //keys
+            if(baton->options->keys)
+            {
+                output += me->module->getKeyText();
+                output += " ";
+            }
+
+            output += me->module->renderText();
+            output += " ";
+
+            maxverses--;
+        }
+
+        //Restore Global Options
+        SwordHandler::manager->setGlobalOption("Transliteration","Off");
+        SwordHandler::manager->setGlobalOption("Headings","Off");
+        SwordHandler::manager->setGlobalOption("Footnotes","Off");
+        SwordHandler::manager->setGlobalOption("Cross-references","Off");
+        SwordHandler::manager->setGlobalOption("Words of Christ in Red","Off");
+        SwordHandler::manager->setGlobalOption("Strong's Numbers","Off");
+        SwordHandler::manager->setGlobalOption("Morphological Tags","Off");
+    }
+    else
+    {
+        listkey = vk.parseVerseList(baton->key.c_str(), vk, true);
+        listkey.setPersist(true);
+
+        me->module->setKey(listkey);
+
+        for((*me->module) = TOP; !me->module->popError(); (*me->module)++) 
+        {
+            output += me->module->getKeyText();
+            output += " ";
+            output += me->module->renderText();
+            output += " ";
+        }
     }
 
     baton->output = output;
+
+    //free mutex here
 }
 
 void SwordModule::Work_AfterRead(uv_work_t* req)
 {
     ReadBaton* baton = static_cast<ReadBaton*>(req->data);
 
-    // Local<Value> argv[1];
-    // argv[0] = Local<Value>::New(String::New(baton->output.c_str()));
-
-    // TRY_CATCH_CALL(Context::GetCurrent()->Global(), baton->callback, 1, argv);
-
     Local<Value> argv[1];
-    
     argv[0] = Local<Value>::New(String::New(baton->output.c_str()));
-    baton->callback->Call(Context::GetCurrent()->Global(), 1, argv);
 
+    TRY_CATCH_CALL(Context::GetCurrent()->Global(), baton->callback, 1, argv);
+
+    // Local<Value> argv[1];
+    
+    // argv[0] = Local<Value>::New(String::New(baton->output.c_str()));
+    // baton->callback->Call(Context::GetCurrent()->Global(), 1, argv);
+
+    delete baton->options;
     delete baton;
 }
 
 Handle<Value> SwordModule::Read(const Arguments& args) 
 {
+
     HandleScope scope;
     SwordModule* me = node::ObjectWrap::Unwrap<SwordModule>(args.This());
 
     if(args.Length() == 2)
     {
         REQUIRE_ARGUMENT_STRING(0, key);
-        // std::string key = std::string(*av);
-
         REQUIRE_ARGUMENT_FUNCTION(1, callback);
+        
+        #ifdef DEBUG
+        cout << "Function read(key,callback)-> Arguments OK" <<  endl;
+        #endif
 
         // Start reading the key.
         ReadBaton* baton = new ReadBaton(me, callback, *key);
         Work_BeginRead(baton);
 
         #ifdef DEBUG
-        // Only gets compiled if DEBUG is defined.
-        cout << "Reading" << endl;
+        cout << "End Read Function" << endl;
         #endif
 
         return args.This();
@@ -191,184 +308,138 @@ Handle<Value> SwordModule::Read(const Arguments& args)
     
     if(args.Length() == 3)
     {
-        if(args[0]->IsString() && args[1]->IsObject() && args[2]->IsFunction())
+        REQUIRE_ARGUMENT_STRING(0, key);
+        REQUIRE_ARGUMENT_OBJECT(1, options);
+        REQUIRE_ARGUMENT_FUNCTION(2, callback);
+
+        #ifdef DEBUG
+        cout << "Function read(key,options,callback)-> Arguments OK" <<  endl;
+        #endif
+
+        Options* readOptions = new Options();
+
+        //Format
+        if( options->Has(String::NewSymbol("format")) && 
+            options->Get(String::NewSymbol("format"))->IsNumber())
         {
-            //KEY
-            v8::String::AsciiValue av(args[0]->ToString());
-            string key = std::string(*av);
-            
-            //OPTIONS
-            Local<Object> options = Local<Object>::Cast(args[1]);
-            
-            int format = FMT_PLAIN;
-            
-            if( options->Has(String::NewSymbol("format")) && 
-                options->Get(String::NewSymbol("format"))->IsNumber())
+            int format = options->Get(String::NewSymbol("format"))->NumberValue();
+
+            readOptions->format = (format <= 9 && format >= 1) ? format : FMT_PLAIN;
+        }
+
+        #ifdef DEBUG
+        cout << "Format: " << readOptions->format <<  endl;
+        #endif
+
+        //Maxverses
+        if( options->Has(String::NewSymbol("maxverses")) && 
+            options->Get(String::NewSymbol("maxverses"))->IsNumber())
+        {
+            int maxverses = options->Get(String::NewSymbol("maxverses"))->NumberValue();
+
+            if(maxverses > 0)
             {
-                format = options->Get(String::NewSymbol("format"))->NumberValue();
-                format = (format <= 9 && format >= 1) ? format : FMT_PLAIN;
+                readOptions->maxverses =  maxverses;
             }
+        }
+
+        #ifdef DEBUG
+        cout << "Maxverses: " << readOptions->maxverses <<  endl;
+        #endif
+        
+        //Locale
+        if( options->Has(String::NewSymbol("locale")) && 
+            options->Get(String::NewSymbol("locale"))->IsString())
+        {
+            String::Utf8Value locale(options->Get(String::NewSymbol("locale"))->ToString());
+            readOptions->locale = std::string(*locale);
+        }
+
+        #ifdef DEBUG
+        cout << "Locale: " << readOptions->locale <<  endl;
+        #endif
+
+        //Display keys
+        if( options->Has(String::NewSymbol("keys")) && 
+            options->Get(String::NewSymbol("keys"))->IsBoolean())
+        {
+            readOptions->keys = options->Get(String::NewSymbol("keys"))->BooleanValue();
+        }
+
+        #ifdef DEBUG
+        cout << "Keys: " << readOptions->keys <<  endl;
+        #endif
+        
+        //Filters
+        if( options->Has(String::NewSymbol("filters")) && 
+            options->Get(String::NewSymbol("filters"))->IsArray())
+        {
+            Local<Array> filters_array = Local<Array>::Cast(options->Get(String::NewSymbol("filters")));
+            unsigned int value;
+            int filters = 0;
             
-            int maxverses = 100;
-            
-            if( options->Has(String::NewSymbol("maxverses")) && 
-                options->Get(String::NewSymbol("maxverses"))->IsNumber())
+            for(unsigned int i=0; i<filters_array->Length(); i++) 
             {
-                maxverses = options->Get(String::NewSymbol("maxverses"))->NumberValue();
-                maxverses = (maxverses > 0) ? maxverses : 1;
-            }
-            
-            string locale = ""; 
-            
-            if( options->Has(String::NewSymbol("locale")) && 
-                options->Get(String::NewSymbol("locale"))->IsString())
-            {
-                v8::String::AsciiValue 
-                localeAV(options->Get(String::NewSymbol("locale"))->ToString());
-                locale = std::string(*localeAV);
-            }
-            
-            char filters = 0;
-            
-            if( options->Has(String::NewSymbol("filters")) && 
-                options->Get(String::NewSymbol("filters"))->IsArray())
-            {
-                Local<Array> filters_array = 
-                Local<Array>::Cast(options->Get(String::NewSymbol("filters")));
-                unsigned int value;
+                value = filters_array->Get(Integer::New(i))->NumberValue();
                 
-                for(unsigned int i=0; i<filters_array->Length(); i++) 
+                if(value == 1)
                 {
-                    value = filters_array->Get(Integer::New(i))->NumberValue();
+                    filters |= 1;
+                    continue;
+                }
                     
-                    if(value == 1)
-                    {
-                        filters |= 1;
-                        continue;
-                    }
-                        
-                    if(value == 2)
-                    {
-                        filters |= 2;
-                        continue;
-                    }
-                        
-                    if(value == 4)
-                    {
-                        filters |= 4;
-                        continue;
-                    }
-                        
-                    if(value == 8)
-                    {
-                        filters |= 8;
-                        continue;
-                    }
-                        
-                    if(value == 16)
-                    {
-                        filters |= 16;
-                        continue;
-                    }
+                if(value == 2)
+                {
+                    filters |= 2;
+                    continue;
+                }
                     
-                    if(value == 32)
-                    {
-                        filters |= 32;
-                        continue;
-                    }
+                if(value == 4)
+                {
+                    filters |= 4;
+                    continue;
+                }
                     
-                    if(value == 64)
-                    {
-                        filters |= 64;
-                        continue;
-                    }
+                if(value == 8)
+                {
+                    filters |= 8;
+                    continue;
+                }
+                    
+                if(value == 16)
+                {
+                    filters |= 16;
+                    continue;
+                }
+                
+                if(value == 32)
+                {
+                    filters |= 32;
+                    continue;
+                }
+                
+                if(value == 64)
+                {
+                    filters |= 64;
+                    continue;
                 }
             }
 
-            VerseKey vk;
-            SWFilter * ffilter = 0;
-
-            if(!locale.empty()) 
-            {
-                LocaleMgr::getSystemLocaleMgr()->setDefaultLocaleName(locale.c_str());
-                vk.setLocale(locale.c_str());
-            }
-            
-            if(format == FMT_PLAIN)
-                ffilter = new ThMLPlain();
-            else if(format == FMT_HTML)
-                ffilter = new ThMLHTML();
-            else if(format == FMT_GBF)
-                ffilter = new ThMLGBF();
-            else if(format == FMT_RTF)
-                ffilter = new ThMLRTF();
-            
-            if(filters & 1)
-                SwordHandler::manager->setGlobalOption("Transliteration","Latin");
-            else
-                SwordHandler::manager->setGlobalOption("Transliteration","Off");
-            if(filters & 2)
-                SwordHandler::manager->setGlobalOption("Headings","On");
-            else
-                SwordHandler::manager->setGlobalOption("Headings","Off");    
-            if(filters & 4)
-                SwordHandler::manager->setGlobalOption("Footnotes","On");
-            else
-                SwordHandler::manager->setGlobalOption("Footnotes","Off");
-            if(filters & 8)
-                SwordHandler::manager->setGlobalOption("Cross-references","On");
-            else
-                SwordHandler::manager->setGlobalOption("Cross-references","Off");
-            if(filters & 16)
-                SwordHandler::manager->setGlobalOption("Words of Christ in Red","On");
-            else
-                SwordHandler::manager->setGlobalOption("Words of Christ in Red","Off");
-            if(filters & 32)
-                SwordHandler::manager->setGlobalOption("Strong's Numbers","On");
-            else
-                SwordHandler::manager->setGlobalOption("Strong's Numbers","Off");
-            if(filters & 64)
-                SwordHandler::manager->setGlobalOption("Morphological Tags","On");
-            else
-                SwordHandler::manager->setGlobalOption("Morphological Tags","Off");
-            
-            
-            //CALLBACK
-            Local<Function> cb = Local<Function>::Cast(args[2]);
-            const unsigned argc = 1;
-            Local<Value> argv[argc];
-            
-            //if(!strcmp(obj->module->Type(), "Lexicons / Dictionaries")) 
-
-            me->module->addRenderFilter(ffilter);
-            
-            ListKey listkey = vk.parseVerseList(key.c_str(), vk, true);
-            listkey.setPersist(true);
-            
-            string output = "";
-            
-            me->module->setKey(listkey);
-            
-            for((*me->module) = TOP; maxverses && !me->module->popError(); (*me->module)++) 
-            { 
-                output += me->module->renderText();
-                maxverses--;
-            }
-            
-            argv[0] = Local<Value>::New(String::New(output.c_str()));
-
-            SwordHandler::manager->setGlobalOption("Transliteration","Off");
-            SwordHandler::manager->setGlobalOption("Headings","Off");
-            SwordHandler::manager->setGlobalOption("Footnotes","Off");
-            SwordHandler::manager->setGlobalOption("Cross-references","Off");
-            SwordHandler::manager->setGlobalOption("Words of Christ in Red","Off");
-            SwordHandler::manager->setGlobalOption("Strong's Numbers","Off");
-            SwordHandler::manager->setGlobalOption("Morphological Tags","Off");
-            
-            cb->Call(Context::GetCurrent()->Global(), argc, argv);
+            readOptions->filters = filters;
         }
-        
-        return scope.Close(Undefined());
+
+        #ifdef DEBUG
+        cout << "Filters: " << readOptions->filters <<  endl;
+        #endif
+
+        ReadBaton* baton = new ReadBaton(me, callback, *key, readOptions);
+        Work_BeginRead(baton);
+
+        #ifdef DEBUG
+        cout << "End Read Function" << endl;
+        #endif
+
+        return args.This();
     }
 
     ThrowException(Exception::TypeError(String::New("Arguments number is wrong")));

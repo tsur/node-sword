@@ -18,13 +18,19 @@
     }                                                                          \
     String::Utf8Value var(args[i]->ToString());
 
+#define REQUIRE_ARGUMENT_OBJECT(i, var)                                        \
+    if (args.Length() <= (i) || !args[i]->IsObject()) {                        \
+        return ThrowException(Exception::TypeError(                            \
+            String::New("Argument " #i " must be an object"))                   \
+        );                                                                     \
+    }                                                                          \
+    Local<Object> var = Local<Object>::Cast(args[i]);
+
 #define TRY_CATCH_CALL(context, callback, argc, argv)                          \
 {   TryCatch try_catch;                                                        \
     (callback)->Call((context), (argc), (argv));                               \
     if (try_catch.HasCaught()) {                                               \
-        return ThrowException(Exception::TypeError(                            \
-            String::New("FATAL ERROR"))                                        \
-        );                                                                     \
+        Exception(try_catch);                                                  \
     }                                                                          }
 
 #endif

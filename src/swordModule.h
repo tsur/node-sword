@@ -17,6 +17,25 @@ class SwordModule: public node::ObjectWrap
         SwordModule(sword::SWModule *target);
         ~SwordModule();
 
+        struct Options {
+
+            int format;
+            int maxverses;
+            bool keys;
+            char filters;
+            std::string locale;;
+
+            Options(){
+
+                format      = 0;
+                maxverses   = 100;
+                keys        = true;
+                filters     = 0;
+                locale      = "";
+            }
+            virtual ~Options() {}
+        };
+
         struct Baton {
             uv_work_t request;
             SwordModule* obj;
@@ -37,10 +56,14 @@ class SwordModule: public node::ObjectWrap
 
         struct ReadBaton : Baton {
             std::string key;
+            Options* options;
             ReadBaton(SwordModule* me_, Handle<Function> cb_, const char* key_) :
-                Baton(me_, cb_), key(key_){}
+                Baton(me_, cb_), key(key_){
+                    options = 0;
+                }
+            ReadBaton(SwordModule* me_, Handle<Function> cb_, const char* key_, Options* options_) :
+                Baton(me_, cb_), key(key_), options(options_){}
         };
-
 
     private:
 
