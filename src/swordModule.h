@@ -40,7 +40,6 @@ class SwordModule: public node::ObjectWrap
             uv_work_t request;
             SwordModule* obj;
             Persistent<Function> callback;
-            std::string output;
 
             Baton(SwordModule* obj_, Handle<Function> cb_) :
                     obj(obj_) {
@@ -57,12 +56,21 @@ class SwordModule: public node::ObjectWrap
         struct ReadBaton : Baton {
             std::string key;
             Options* options;
+            std::string output;
+
             ReadBaton(SwordModule* me_, Handle<Function> cb_, const char* key_) :
                 Baton(me_, cb_), key(key_){
                     options = 0;
                 }
             ReadBaton(SwordModule* me_, Handle<Function> cb_, const char* key_, Options* options_) :
                 Baton(me_, cb_), key(key_), options(options_){}
+        };
+
+        struct SearchBaton : Baton {
+            std::string key;
+            sword::ListKey output;
+            SearchBaton(SwordModule* me_, Handle<Function> cb_, const char* key_) :
+                Baton(me_, cb_), key(key_){}
         };
 
     private:
@@ -75,9 +83,9 @@ class SwordModule: public node::ObjectWrap
         static void Work_AfterRead(uv_work_t* req);
 
         static Handle<Value> Search(const Arguments& args);
-        // static void Work_BeginSearch(Baton* baton);
-        // static void Work_Search(uv_work_t* req);
-        // static void Work_AfterSearch(uv_work_t* req);
+        static void Work_BeginSearch(Baton* baton);
+        static void Work_Search(uv_work_t* req);
+        static void Work_AfterSearch(uv_work_t* req);
 
         static Persistent<Function> constructor;
 

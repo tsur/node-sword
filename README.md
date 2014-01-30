@@ -85,7 +85,41 @@ sword.info('locales', function(locales){
 
 ```js
 
-var sword = require('node-sword');
+var sword       = require('node-sword');
+var SWModule    = sword.module;
+
+try
+{
+    var bible_kjv       = new sword.module('KJV');
+    var bible_chincsv   = new SWModule('ChiNCVs');
+
+    bible_kjv.search('God', function(result){
+    
+        console.log(result);
+    });
+
+    bible_kjv.read('Judges 1:1', {keys:true, locale:"fi"}, function(result){
+    
+        console.log(result);
+    });
+
+    bible_kjv.read('Judges 1:1', {keys:false}, function(result){
+    
+        console.log(result);
+    });
+
+    bible_chincsv.read('Genesis 1:1', function(result){
+    
+        console.log(result);
+    });
+    
+}
+catch(e)
+{
+    console.log(e);
+}
+
+
 
 sword.module('KJV', function(err, bible){
 

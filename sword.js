@@ -26,33 +26,25 @@ try
     var bible_kjv       = new sword.module('KJV');
     var bible_chincsv   = new SWModule('ChiNCVs');
 
-    // bible_kjv.search('God', function(result){
+    bible_kjv.search('God', function(result){
     
-    //     console.log(result);
-    // });
+        console.log(result);
+    });
 
     bible_chincsv.read('Genesis 1:1', function(result){
     
         console.log(result);
     });
 
-    bible_kjv.read('Genesis 1:1', function(result){
+    // bible_kjv.read('Genesis 1:1', function(result){
     
-        console.log(result);
-    });
+    //     console.log(result);
+    // });
 
-    bible_kjv.read('Judges 1:1', {keys:true, locale:"fi"}, function(result){
+    // bible_kjv.read('Judges 1:1', {keys:true, locale:"fi"}, function(result){
     
-        console.log(result);
-    });
-// setTimeout(function(){
-
-//     bible_kjv.search('God', function(result){
-    
-//         console.log(result);
-//     });
-// },5000);
-
+    //     console.log(result);
+    // });
     
 }
 catch(e)

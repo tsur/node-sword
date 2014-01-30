@@ -1,5 +1,5 @@
 // Comment this line to disable debug output
-#define DEBUG
+// #define DEBUG
 
 #include <node.h>
 #include <string>
@@ -107,16 +107,6 @@ Handle<Value> SwordModule::New(const Arguments& args)
   }
 }
 
-
-
-// if(args[0]->IsString() && args[1]->IsFunction())
-//         {
-//             const unsigned argc = 1;
-//             Local<Value> argv[argc];
-            
-//             argv[0] = Local<Value>::New(String::New(output.c_str()));
-//             cb->Call(Context::GetCurrent()->Global(), argc, argv);
-//         }
 void SwordModule::Work_BeginRead(Baton* baton) 
 {
     int status = uv_queue_work(uv_default_loop(),
@@ -126,8 +116,8 @@ void SwordModule::Work_BeginRead(Baton* baton)
 
 void SwordModule::Work_Read(uv_work_t* req)
 {
-    //get mutex here
-    
+    //lock mutex here
+
     ReadBaton* baton = static_cast<ReadBaton*>(req->data);
     SwordModule* me = baton->obj;
     VerseKey vk;
@@ -446,6 +436,55 @@ Handle<Value> SwordModule::Read(const Arguments& args)
     return scope.Close(Undefined());
 }
 
+void SwordModule::Work_BeginSearch(Baton* baton) 
+{
+    int status = uv_queue_work(uv_default_loop(),
+        &baton->request, Work_Search, (uv_after_work_cb)Work_AfterSearch);
+    assert(status == 0);
+}
+
+void SwordModule::Work_Search(uv_work_t* req)
+{
+    //lock mutex here
+    SearchBaton* baton = static_cast<SearchBaton*>(req->data);
+    SwordModule* me = baton->obj;
+
+    baton->output = me->module->search(baton->key.c_str(), -1, REG_ICASE);
+
+    (baton->output).sort();
+    //free mutex here
+}
+
+void SwordModule::Work_AfterSearch(uv_work_t* req)
+{
+    SearchBaton* baton = static_cast<SearchBaton*>(req->data);
+
+    Local<Value> argv[1];
+
+    if((baton->output).getCount())
+    {
+        int ac = 0;
+        Local<Array> results = Array::New((baton->output).getCount());
+
+        while(!(baton->output).popError()) 
+        {
+            results->Set(ac, String::New((const char*)baton->output));
+            ac++;
+            (baton->output)++;
+        }
+
+        argv[0] = results;
+    }
+    else
+    {
+        argv[0] = Array::New();
+    }
+
+    TRY_CATCH_CALL(Context::GetCurrent()->Global(), baton->callback, 1, argv);
+
+    delete baton;
+}
+
 Handle<Value> SwordModule::Search(const Arguments& args) 
 {
     HandleScope scope;
@@ -453,49 +492,23 @@ Handle<Value> SwordModule::Search(const Arguments& args)
 
     if(args.Length() == 2)
     {
-        if(args[0]->IsString() && args[1]->IsFunction())
-        {
-            v8::String::AsciiValue av(args[0]->ToString());
-            string search = std::string(*av);
-
-            // cout << "aqui1" << endl;
-            
-            ListKey result = obj->module->search(search.c_str(), -1, REG_ICASE);
-
-            // cout << "aqui2" << endl;
-
-            result.sort();
-            
-            Local<Function> cb = Local<Function>::Cast(args[1]);
-            const unsigned argc = 1;
-            Local<Value> argv[argc];
-            
-            if(!result.getCount())
-            {
-                argv[0] = Array::New();
-            
-                cb->Call(Context::GetCurrent()->Global(), argc, argv);
-                return scope.Close(Undefined());
-            }
-            
-            Local<Array> results = Array::New(result.getCount());
-            
-            int ac = 0;
-            
-            while(!result.popError()) 
-            {
-                results->Set(ac, String::New((const char*)result));
-                // cout << ac << (const char*)result << endl;
-                ac++;
-                result++;
-            }
-
-            argv[0] = results;
-            
-            cb->Call(Context::GetCurrent()->Global(), argc, argv);
-        }
         
-        return scope.Close(Undefined());
+        REQUIRE_ARGUMENT_STRING(0, key);
+        REQUIRE_ARGUMENT_FUNCTION(1, callback);
+        
+        #ifdef DEBUG
+        cout << "Function search(key,callback)-> Arguments OK" <<  endl;
+        #endif
+
+        // Start reading the key.
+        SearchBaton* baton = new SearchBaton(obj, callback, *key);
+        Work_BeginSearch(baton);
+
+        #ifdef DEBUG
+        cout << "End Read Function" << endl;
+        #endif
+
+        return args.This();
     }
     
     if(args.Length() == 3)
