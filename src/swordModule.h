@@ -14,8 +14,16 @@ class SwordModule: public node::ObjectWrap
     	static void Init(Handle<Object> exports);
 
     	SwordModule();
-        SwordModule(sword::SWModule *target);
+        // SwordModule(sword::SWModule *target);
+        SwordModule(const char* module_) : module(module_) 
+        {
+            uv_mutex_init(&glock);
+        };
+
         ~SwordModule();
+
+        uv_mutex_t glock;
+        std::string module;
 
         struct Options {
 
@@ -23,7 +31,7 @@ class SwordModule: public node::ObjectWrap
             int maxverses;
             bool keys;
             char filters;
-            std::string locale;;
+            std::string locale;
 
             Options(){
 
@@ -89,7 +97,7 @@ class SwordModule: public node::ObjectWrap
 
         static Persistent<Function> constructor;
 
-        sword::SWModule *module;
+        // sword::SWModule *module;
 };
 
 #endif

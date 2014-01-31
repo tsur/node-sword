@@ -34,13 +34,22 @@ Persistent<Function> SwordModule::constructor;
 
 SwordModule::SwordModule(){};
 
-SwordModule::SwordModule(SWModule *target)
-{
-    module = target;
-};
+// SwordModule::SwordModule(SWModule *target)
+// SwordModule::SwordModule(const char* target)
+// {
+//     module = target;
+//     // uv_barrier_init(&blocker, 4);
+//     // uv_rwlock_init(&glock);
+//     uv_mutex_init(&glock);
+// };
 
 //Destructor
-SwordModule::~SwordModule() {};
+SwordModule::~SwordModule() 
+{
+    uv_mutex_destroy(&glock);
+    // uv_barrier_destroy(&blocker);
+    // uv_rwlock_destroy(&glock);
+};
 
 void SwordModule::Init(Handle<Object> exports) {
   // Prepare constructor template
@@ -78,25 +87,29 @@ Handle<Value> SwordModule::New(const Arguments& args)
         return scope.Close(Undefined());
     }
     
-    v8::String::AsciiValue av(args[0]->ToString());
-    string module_name = std::string(*av);
+    REQUIRE_ARGUMENT_STRING(0, module_name);
 
-    SWModule *mod;
-    mod = SwordHandler::manager->getModule(module_name.c_str());
+    SWModule *mod = SwordHandler::manager->getModule(*module_name);
+
+    #ifdef DEBUG
+    cout << "Module loaded: " <<  mod->getName() << endl;
+    #endif
 
     if(!mod) 
     {
-        string error = "module " + module_name + " is not installed";
+        string error = "module " + std::string(*module_name) + " is not installed";
+        delete mod;
         ThrowException(Exception::TypeError(String::New(error.c_str())));
         return scope.Close(Undefined());
     }
 
-    SwordModule* obj = new SwordModule(mod);
+    SwordModule* obj = new SwordModule(*module_name);
 
     obj->Wrap(args.This());
 
-    return args.This();
+    // delete mod;
 
+    return args.This();
   } 
   else 
   {
@@ -124,6 +137,19 @@ void SwordModule::Work_Read(uv_work_t* req)
     ListKey listkey;
     std::string output = "";
 
+    // uv_rwlock_wrlock(&(me->glock));
+    uv_mutex_lock(&(me->glock));
+
+    #ifdef DEBUG
+    cout << "Module to read: " << me->module.c_str() << endl;
+    #endif
+
+    SWModule *module = SwordHandler::manager->getModule(me->module.c_str());
+
+    #ifdef DEBUG
+    cout << "Module loaded (read): " <<  module->getName() << endl;
+    #endif
+
     if(baton->options != NULL)
     {
         #ifdef DEBUG
@@ -147,7 +173,7 @@ void SwordModule::Work_Read(uv_work_t* req)
             cout << "format defined" << endl;
             #endif
 
-            me->module->addRenderFilter(format);
+            module->addRenderFilter(format);
         }
 
         //Locale
@@ -201,9 +227,9 @@ void SwordModule::Work_Read(uv_work_t* req)
         listkey = vk.parseVerseList(baton->key.c_str(), vk, true);
         listkey.setPersist(true);
 
-        me->module->setKey(listkey);
+        module->setKey(listkey);
 
-        for((*me->module) = TOP; maxverses && !me->module->popError(); (*me->module)++) 
+        for((*module) = TOP; maxverses && !module->popError(); (*module)++) 
         { 
             #ifdef DEBUG
             cout << "Maxverses loop: " << maxverses << endl;
@@ -212,11 +238,11 @@ void SwordModule::Work_Read(uv_work_t* req)
             //keys
             if(baton->options->keys)
             {
-                output += me->module->getKeyText();
+                output += module->getKeyText();
                 output += " ";
             }
 
-            output += me->module->renderText();
+            output += module->renderText();
             output += " ";
 
             maxverses--;
@@ -236,18 +262,28 @@ void SwordModule::Work_Read(uv_work_t* req)
         listkey = vk.parseVerseList(baton->key.c_str(), vk, true);
         listkey.setPersist(true);
 
-        me->module->setKey(listkey);
+        module->setKey(listkey);
 
-        for((*me->module) = TOP; !me->module->popError(); (*me->module)++) 
+        for((*module) = TOP; !module->popError(); (*module)++) 
         {
-            output += me->module->getKeyText();
+            output += module->getKeyText();
             output += " ";
-            output += me->module->renderText();
+            output += module->renderText();
             output += " ";
         }
     }
 
     baton->output = output;
+
+    #ifdef DEBUG
+    cout << "unlock -> read" <<  endl;
+    #endif
+
+    // delete module;
+
+    uv_mutex_unlock(&(me->glock));
+    // uv_rwlock_wrunlock(&(me->glock));
+    // uv_barrier_wait(&(me->blocker));
 
     //free mutex here
 }
@@ -449,9 +485,32 @@ void SwordModule::Work_Search(uv_work_t* req)
     SearchBaton* baton = static_cast<SearchBaton*>(req->data);
     SwordModule* me = baton->obj;
 
-    baton->output = me->module->search(baton->key.c_str(), -1, REG_ICASE);
+    uv_mutex_lock(&(me->glock));
+
+    #ifdef DEBUG
+    cout << "lock -> search" <<  endl;
+    #endif
+    // uv_rwlock_wrlock(&(me->glock));
+
+    SWModule *module;
+    module = SwordHandler::manager->getModule(me->module.c_str());
+
+    baton->output = module->search(baton->key.c_str(), -1, REG_ICASE);
 
     (baton->output).sort();
+
+    // uv_rwlock_wrunlock(&(me->glock));
+    // uv_barrier_wait(&(me->blocker));
+
+    #ifdef DEBUG
+    cout << "unlock -> search" <<  endl;
+    #endif
+
+    // delete module;
+    // std::auto_ptr<Object1> obj1(new Object1);
+
+    uv_mutex_unlock(&(me->glock));
+
     //free mutex here
 }
 
@@ -511,97 +570,97 @@ Handle<Value> SwordModule::Search(const Arguments& args)
         return args.This();
     }
     
-    if(args.Length() == 3)
-    {
-        if(args[0]->IsString() && args[1]->IsObject() && args[2]->IsFunction())
-        {
-            v8::String::AsciiValue av(args[0]->ToString());
-            string search = std::string(*av);
+    // if(args.Length() == 3)
+    // {
+    //     if(args[0]->IsString() && args[1]->IsObject() && args[2]->IsFunction())
+    //     {
+    //         v8::String::AsciiValue av(args[0]->ToString());
+    //         string search = std::string(*av);
             
-            //OPTIONS
-            Local<Object> options = Local<Object>::Cast(args[1]);
+    //         //OPTIONS
+    //         Local<Object> options = Local<Object>::Cast(args[1]);
             
-            string iscope = "";
-            VerseKey vk;
+    //         string iscope = "";
+    //         VerseKey vk;
             
-            if( options->Has(String::NewSymbol("scope")) && 
-                options->Get(String::NewSymbol("scope"))->IsString())
-            {
-                v8::String::AsciiValue 
-                scopeAV(options->Get(String::NewSymbol("scope"))->ToString());
-                iscope = std::string(*scopeAV);
-            }
+    //         if( options->Has(String::NewSymbol("scope")) && 
+    //             options->Get(String::NewSymbol("scope"))->IsString())
+    //         {
+    //             v8::String::AsciiValue 
+    //             scopeAV(options->Get(String::NewSymbol("scope"))->ToString());
+    //             iscope = std::string(*scopeAV);
+    //         }
             
-            if( options->Has(String::NewSymbol("locale")) && 
-                options->Get(String::NewSymbol("locale"))->IsString())
-            {
-                v8::String::AsciiValue 
-                localeAV(options->Get(String::NewSymbol("locale"))->ToString());
-                string locale = std::string(*localeAV);
+    //         if( options->Has(String::NewSymbol("locale")) && 
+    //             options->Get(String::NewSymbol("locale"))->IsString())
+    //         {
+    //             v8::String::AsciiValue 
+    //             localeAV(options->Get(String::NewSymbol("locale"))->ToString());
+    //             string locale = std::string(*localeAV);
                 
-                if(!locale.empty()) 
-                {
-                    LocaleMgr::getSystemLocaleMgr()->setDefaultLocaleName(locale.c_str());
-                    vk.setLocale(locale.c_str());
-                }
-            }
+    //             if(!locale.empty()) 
+    //             {
+    //                 LocaleMgr::getSystemLocaleMgr()->setDefaultLocaleName(locale.c_str());
+    //                 vk.setLocale(locale.c_str());
+    //             }
+    //         }
             
-            int type = -1;
+    //         int type = -1;
             
-            if( options->Has(String::NewSymbol("method")) && 
-                options->Get(String::NewSymbol("method"))->IsNumber())
-            {
-                type = options->Get(String::NewSymbol("method"))->NumberValue();
-                type = (type <= 0 && type >= -4) ? type : -1;
-            }
+    //         if( options->Has(String::NewSymbol("method")) && 
+    //             options->Get(String::NewSymbol("method"))->IsNumber())
+    //         {
+    //             type = options->Get(String::NewSymbol("method"))->NumberValue();
+    //             type = (type <= 0 && type >= -4) ? type : -1;
+    //         }
             
-            ListKey result;
+    //         ListKey result;
             
-            if(!iscope.empty())
-            {
-                ListKey scopeList = vk.parseVerseList(iscope.c_str(),"", true);
-                //scopeList.Persist(1);
-                SWKey* scope = &scopeList;
-                result = obj->module->search(search.c_str(), type, REG_ICASE, scope);      
-            }
-            else
-            {
-                result = obj->module->search(search.c_str(), type, REG_ICASE);
-            }
+    //         if(!iscope.empty())
+    //         {
+    //             ListKey scopeList = vk.parseVerseList(iscope.c_str(),"", true);
+    //             //scopeList.Persist(1);
+    //             SWKey* scope = &scopeList;
+    //             result = obj->module->search(search.c_str(), type, REG_ICASE, scope);      
+    //         }
+    //         else
+    //         {
+    //             result = obj->module->search(search.c_str(), type, REG_ICASE);
+    //         }
             
-            result.sort();
+    //         result.sort();
             
-            Local<Function> cb = Local<Function>::Cast(args[2]);
-            const unsigned argc = 1;
-            Local<Value> argv[argc];
+    //         Local<Function> cb = Local<Function>::Cast(args[2]);
+    //         const unsigned argc = 1;
+    //         Local<Value> argv[argc];
             
-            if(!result.getCount())
-            {
-                argv[0] = Array::New();
+    //         if(!result.getCount())
+    //         {
+    //             argv[0] = Array::New();
             
-                cb->Call(Context::GetCurrent()->Global(), argc, argv);
-                return scope.Close(Undefined());
-            }
+    //             cb->Call(Context::GetCurrent()->Global(), argc, argv);
+    //             return scope.Close(Undefined());
+    //         }
             
-            Local<Array> results = Array::New(result.getCount());
+    //         Local<Array> results = Array::New(result.getCount());
             
-            int ac = 0;
+    //         int ac = 0;
             
-            while(!result.popError()) 
-            {
-                results->Set(ac, String::New((const char*)result));
-                //cout << ac << (const char*)result << endl;
-                ac++;
-                result++;
-            }
+    //         while(!result.popError()) 
+    //         {
+    //             results->Set(ac, String::New((const char*)result));
+    //             //cout << ac << (const char*)result << endl;
+    //             ac++;
+    //             result++;
+    //         }
 
-            argv[0] = results;
+    //         argv[0] = results;
             
-            cb->Call(Context::GetCurrent()->Global(), argc, argv);
-        }
+    //         cb->Call(Context::GetCurrent()->Global(), argc, argv);
+    //     }
         
-        return scope.Close(Undefined());
-    }
+    //     return scope.Close(Undefined());
+    // }
 
     ThrowException(Exception::TypeError(String::New("Arguments number is wrong")));
     return scope.Close(Undefined());
