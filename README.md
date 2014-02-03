@@ -12,6 +12,7 @@ $ npm install node-sword
 ## Dependences
 
 - Sword API Engine (http://www.crosswire.org/sword/docs/apiinstall.jsp)
+- pkg-config package (i.e. for Ubuntu/Debian sudo apt-get install pkg-config)
 
 Note: node-sword only works for Unix Systems 
 

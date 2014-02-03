@@ -37,11 +37,6 @@ try
     });
 
 
-
-
-
-    
-
     // bible_kjv.read('Judges 1:1', {keys:true, locale:"es"}, function(result){
     
     //     console.log(result);
