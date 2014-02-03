@@ -8,6 +8,7 @@ test: test-unit
 
 test-unit:
 	@NODE_ENV=test mocha \
+		--timeout 30000 \
 		--reporter $(REPORTER) \
 		$(MOCHA_OPTS)
 

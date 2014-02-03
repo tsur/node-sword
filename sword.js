@@ -31,10 +31,10 @@ try
         console.log(result);
     });
 
-    bible_kjv.search('God', function(result){
+    // bible_kjv.search('God', function(result){
     
-        console.log(result);
-    });
+    //     console.log(result);
+    // });
 
 
     // bible_kjv.read('Judges 1:1', {keys:true, locale:"es"}, function(result){
