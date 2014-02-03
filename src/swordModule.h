@@ -23,6 +23,7 @@ class SwordModule: public node::ObjectWrap
         ~SwordModule();
 
         uv_mutex_t glock;
+        
         std::string module;
 
         struct Options {

@@ -8,16 +8,16 @@ sword.configure({
     
 });
 
-sword.info('locales', function(result){
+// sword.info('locales', function(result){
 
-    console.log('locales: ',result);
-});
+//     console.log('locales: ',result);
+// });
 
-sword.info('modules', function(modules){
+// sword.info('modules', function(modules){
 
-    console.log(modules);
+//     console.log(modules);
     
-});
+// });
 
 var SWModule = sword.module;
 
@@ -31,21 +31,32 @@ try
         console.log(result);
     });
 
-    bible_kjv.read('Judges 1:1', {keys:true, locale:"fi"}, function(result){
-    
-        console.log(result);
-    });
-
     bible_kjv.search('God', function(result){
     
         console.log(result);
     });
 
-    bible_chincsv.read('Genesis 1:1', function(result){
+
+
+
+
     
-        console.log(result);
-    });
+
+    // bible_kjv.read('Judges 1:1', {keys:true, locale:"es"}, function(result){
     
+    //     console.log(result);
+    // });
+
+    // bible_kjv.read('Ex', function(result){
+    
+    //     console.log(result);
+    // });
+
+    // bible_chincsv.read('Genesis 1:1', {keys:false, locale:"es"}, function(result){
+    
+    //     console.log(result);
+    // });
+
 }
 catch(e)
 {
@@ -78,36 +89,3 @@ catch(e)
 // {
 //     console.log(e);
 // }
-
-
-// sword.module('KJV', function(err, bible){
-
-//     if(err) return console.log('bible not found');
-    
-//     //Do your work with module
-//     // module.read('Genesis 1:1', function(result){
-    
-//     //     console.log(result);
-//     // });
-
-//     bible.read('Genesis 1:2', function(result){
-    
-//         console.log(result);
-//     });
-    
-//     // bible.search('God', function(result){
-    
-//     //     console.log(result);
-//     // });
-    
-// });
-
-// sword.module("ChiNCVs", function(err, bible){
-
-//     if(err) return console.log(err);
-    
-//     bible.read('Genesis 1:1', function(result){
-
-//         console.log(result);
-//     });
-// });

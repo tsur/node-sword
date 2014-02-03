@@ -137,7 +137,6 @@ void SwordModule::Work_Read(uv_work_t* req)
     ListKey listkey;
     std::string output = "";
 
-    // uv_rwlock_wrlock(&(me->glock));
     uv_mutex_lock(&(me->glock));
 
     #ifdef DEBUG
@@ -282,8 +281,6 @@ void SwordModule::Work_Read(uv_work_t* req)
     // delete module;
 
     uv_mutex_unlock(&(me->glock));
-    // uv_rwlock_wrunlock(&(me->glock));
-    // uv_barrier_wait(&(me->blocker));
 
     //free mutex here
 }
@@ -296,11 +293,6 @@ void SwordModule::Work_AfterRead(uv_work_t* req)
     argv[0] = Local<Value>::New(String::New(baton->output.c_str()));
 
     TRY_CATCH_CALL(Context::GetCurrent()->Global(), baton->callback, 1, argv);
-
-    // Local<Value> argv[1];
-    
-    // argv[0] = Local<Value>::New(String::New(baton->output.c_str()));
-    // baton->callback->Call(Context::GetCurrent()->Global(), 1, argv);
 
     delete baton->options;
     delete baton;
@@ -490,17 +482,23 @@ void SwordModule::Work_Search(uv_work_t* req)
     #ifdef DEBUG
     cout << "lock -> search" <<  endl;
     #endif
-    // uv_rwlock_wrlock(&(me->glock));
 
-    SWModule *module;
-    module = SwordHandler::manager->getModule(me->module.c_str());
+    SWModule *module = SwordHandler::manager->getModule(me->module.c_str());
+
+    //We need to reset module position
+    module->setKey("Gen");//TODO: What if a Module has no Gen book?
+
+    //Looks like does not work
+    // module->setPosition(POS_TOP);
+    // (*module) = TOP;
 
     baton->output = module->search(baton->key.c_str(), -1, REG_ICASE);
 
     (baton->output).sort();
 
-    // uv_rwlock_wrunlock(&(me->glock));
-    // uv_barrier_wait(&(me->blocker));
+    #ifdef DEBUG
+    cout << "Matches found before after: " << (baton->output).getCount() << endl;
+    #endif
 
     #ifdef DEBUG
     cout << "unlock -> search" <<  endl;
@@ -519,6 +517,10 @@ void SwordModule::Work_AfterSearch(uv_work_t* req)
     SearchBaton* baton = static_cast<SearchBaton*>(req->data);
 
     Local<Value> argv[1];
+
+    #ifdef DEBUG
+    cout << "Matches found: " << (baton->output).getCount() << endl;
+    #endif
 
     if((baton->output).getCount())
     {
