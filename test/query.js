@@ -26,164 +26,164 @@ describe('query keys from different modules', function(){
 
     });
 
-    // it('should read right text for an existing key', function(done){
+    it('should read right text for an existing key', function(done){
 
-    //     (function(){
+        (function(){
 
-    //       var bible_kjv = new sword.module('KJV');
+          var bible_kjv = new sword.module('KJV');
 
-    //       bible_kjv.read('Genesis 1:1', function(result){
+          bible_kjv.read('Genesis 1:1', function(result){
 
-    //         should.exists(result);
-    //         result.should.be.exactly("Genesis 1:1 In the beginning God created the heaven and the earth.");
+            should.exists(result);
+            result.should.be.exactly("Genesis 1:1 In the beginning God created the heaven and the earth.");
 
-    //         done();
+            done();
 
-    //       });
+          });
 
-    //     }).should.not.throw();
+        }).should.not.throw();
 
-    // });
+    });
 
-    // it('should not read any text for an unexisting key', function(done){
+    it('should not read any text for an unexisting key', function(done){
 
-    //     (function(){
+        (function(){
 
-    //       var bible_kjv = new sword.module('KJV');
+          var bible_kjv = new sword.module('KJV');
 
-    //       bible_kjv.read('unknown 1:1', function(result){
+          bible_kjv.read('unknown 1:1', function(result){
 
-    //         should.exists(result);
-    //         result.should.be.empty;
+            should.exists(result);
+            result.should.be.empty;
 
-    //         done();
+            done();
 
-    //       });
+          });
 
-    //     }).should.not.throw();
+        }).should.not.throw();
 
-    // });
+    });
 
-    // it('should get matches for an existing text on a module', function(done){
+    it('should get matches for an existing text on a module', function(done){
 
-    //     (function(){
+        (function(){
 
-    //       var bible_kjv = new sword.module('KJV');
+          var bible_kjv = new sword.module('KJV');
 
-    //       bible_kjv.search('Lamech', function(result){
+          bible_kjv.search('Lamech', function(result){
 
-    //         result.should.be.an.instanceOf(Array);
-    //         result.should.not.be.empty;
+            result.should.be.an.instanceOf(Array);
+            result.should.not.be.empty;
 
-    //         done();
+            done();
 
-    //       });
+          });
 
-    //     }).should.not.throw();
+        }).should.not.throw();
 
-    // });
+    });
 
-    // it('should not get matches for an unexisting text on a module', function(done){
+    it('should not get matches for an unexisting text on a module', function(done){
 
-    //     (function(){
+        (function(){
 
-    //       var bible_kjv = new sword.module('KJV');
+          var bible_kjv = new sword.module('KJV');
 
-    //       bible_kjv.search('trinity', function(result){
+          bible_kjv.search('trinity', function(result){
 
-    //         result.should.be.an.instanceOf(Array);
-    //         result.should.not.be.empty;
+            result.should.be.an.instanceOf(Array);
+            result.should.not.be.empty;
 
-    //         done();
+            done();
 
-    //       });
+          });
 
-    //     }).should.not.throw();
+        }).should.not.throw();
         
-    // });
+    });
 
-    // it('should not get matches for an existing text on some foreign module but not present in the asked module', function(done){
+    it('should not get matches for an existing text on some foreign module but not present in the asked module', function(done){
 
-    //     (function(){
+        (function(){
 
-    //       var bible_kjv = new sword.module('KJV');
+          var bible_kjv = new sword.module('KJV');
 
-    //       //Dios means God in Spanish
-    //       bible_kjv.search('Dios', function(result){
+          //Dios means God in Spanish
+          bible_kjv.search('Dios', function(result){
 
-    //         result.should.be.an.instanceOf(Array);
-    //         result.should.not.be.empty;
+            result.should.be.an.instanceOf(Array);
+            result.should.not.be.empty;
 
-    //         done();
+            done();
 
-    //       });
+          });
 
-    //     }).should.not.throw();
+        }).should.not.throw();
         
-    // });
+    });
 
 
-    // it('should work in the event of concurrent requests', function(done){
+    it('should work in the event of concurrent requests', function(done){
 
-    //     (function(){
+        (function(){
 
-    //       var bible_kjv     = new sword.module('KJV');
-    //       var num_requests  = 0;
+          var bible_kjv     = new sword.module('KJV');
+          var num_requests  = 0;
 
-    //       num_requests++;
-    //       bible_kjv.read('Genesis 1:1', function(result){
+          num_requests++;
+          bible_kjv.read('Genesis 1:1', function(result){
 
-    //         should.exists(result);
-    //         result.should.not.be.empty;
+            should.exists(result);
+            result.should.not.be.empty;
 
-    //         num_requests--;
+            num_requests--;
 
-    //         if(!num_requests)
-    //         {
-    //             done();
-    //         }
+            if(!num_requests)
+            {
+                done();
+            }
 
-    //       });
+          });
 
-    //       num_requests++;
-    //       bible_kjv.read('Genesis 1:2', function(result){
+          num_requests++;
+          bible_kjv.read('Genesis 1:2', function(result){
 
-    //         should.exists(result);
-    //         result.should.not.be.empty;
+            should.exists(result);
+            result.should.not.be.empty;
 
-    //         num_requests--;
+            num_requests--;
 
-    //         if(!num_requests)
-    //         {
-    //             done();
-    //         }
+            if(!num_requests)
+            {
+                done();
+            }
 
-    //       });
+          });
 
-    //       num_requests++;
-    //       bible_kjv.read('Genesis 1:3', function(result){
+          num_requests++;
+          bible_kjv.read('Genesis 1:3', function(result){
 
-    //         should.exists(result);
-    //         result.should.not.be.empty;
+            should.exists(result);
+            result.should.not.be.empty;
 
-    //         num_requests--;
+            num_requests--;
 
-    //         if(!num_requests)
-    //         {
-    //             done();
-    //         }
+            if(!num_requests)
+            {
+                done();
+            }
 
-    //       });
+          });
 
-    //     }).should.not.throw();
+        }).should.not.throw();
         
-    // });
+    });
 
-    // TODO
-    // it('should not display keys when options keys is set to false', function(done){
+    TODO
+    it('should not display keys when options keys is set to false', function(done){
         
         
-    // });
+    });
     
     
     after(function(){
