@@ -128,4 +128,13 @@ catch(e)
 
 ```
 
+## Tests
+
+In order to run the tests, first install dependences and then just run "make test" or "npm test" 
+
+```sh
+$ npm install
+$ make test
+```
+
 ----------------------------------------------------

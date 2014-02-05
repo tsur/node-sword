@@ -2,44 +2,96 @@ var should = require('should')//require('assert')
     ,sword = require('../build/Release/sword')
     ;
 
-describe('query keys from different modules', function(){
+sword.configure({
+
+    'modules'   : __dirname+'/../resources',   /* default: system lookup (See note * below) */
+    // 'format'    : sword.FORMAT_RTF,                 /* default: sword.FORMAT_PLAIN */
+    'locales'   : __dirname+'/../resources/locales'    /* default: /usr/share/sword/locales.d */
+    
+});
+
+describe('TestSuite for loading modules:', function(){
   
     before(function(){
 
-        sword.configure({
-
-            'modules'   : __dirname+'/../resources',   /* default: system lookup (See note * below) */
-            // 'format'    : sword.FORMAT_RTF,                 /* default: sword.FORMAT_PLAIN */
-            'locales'   : __dirname+'/../resources/locales'    /* default: /usr/share/sword/locales.d */
-            
-        });
-
     });
   
-    it('should throw exception when module not found', function(done){
+    it('should throw exception when module not found', function(){
 
         (function(){
           
-          var kjv = new sword.module('UNKNOWN');
+          var module = new sword.module('UNKNOWN');
+
+        }).should.throw();
+
+        (function(){
+          
+          var module = new sword.module('');
+
+        }).should.throw();
+
+        (function(){
+          
+          var module = new sword.module();
+
+        }).should.throw();
+
+        (function(){
+          
+          var module = new sword.module(20);
+
+        }).should.throw();
+
+        (function(){
+          
+          var module = new sword.module({});
+
+        }).should.throw();
+
+        (function(){
+          
+          var module = new sword.module(true);
 
         }).should.throw();
 
     });
 
-    it('should read right text for an existing key', function(done){
+    it('should not throw exception when module is found', function(){
+
+        (function(){
+          
+          var bible_kjv = new sword.module('KJV');
+
+        }).should.not.throw();
+
+    });
+
+    after(function(){
+
+    });
+  
+});
+
+describe('TestSuite for querying modules:', function(){
+  
+    before(function(){
+
+    });
+
+    it('should read right text for an existing key', function (done){
 
         (function(){
 
-          var bible_kjv = new sword.module('KJV');
+            var bible_kjv = new sword.module('KJV');
 
-          bible_kjv.read('Genesis 1:1', function(result){
+            bible_kjv.read('Genesis 1:1', function(result){
 
-            should.exists(result);
-            result.should.be.exactly("Genesis 1:1 In the beginning God created the heaven and the earth.");
+                should.exists(result);
+                result.should.not.be.empty;
+                // result.should.equal("Genesis 1:1 In the beginning God created the heaven and the earth.");
+                done();
 
-            done();
-
-          });
+            });
 
         }).should.not.throw();
 
@@ -92,7 +144,7 @@ describe('query keys from different modules', function(){
           bible_kjv.search('trinity', function(result){
 
             result.should.be.an.instanceOf(Array);
-            result.should.not.be.empty;
+            result.should.be.empty;
 
             done();
 
@@ -112,7 +164,7 @@ describe('query keys from different modules', function(){
           bible_kjv.search('Dios', function(result){
 
             result.should.be.an.instanceOf(Array);
-            result.should.not.be.empty;
+            result.should.be.empty;
 
             done();
 
@@ -121,7 +173,6 @@ describe('query keys from different modules', function(){
         }).should.not.throw();
         
     });
-
 
     it('should work in the event of concurrent requests', function(done){
 
@@ -179,11 +230,11 @@ describe('query keys from different modules', function(){
         
     });
 
-    TODO
-    it('should not display keys when options keys is set to false', function(done){
+    // TODO
+    // it('should not display keys when options keys is set to false', function(done){
         
         
-    });
+    // });
     
     
     after(function(){
@@ -191,5 +242,3 @@ describe('query keys from different modules', function(){
     });
   
 });
-
-
