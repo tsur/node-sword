@@ -34,7 +34,7 @@ sword.configure({
 });
 
 ```
-The modules attribute defines the directory containing mods.conf file or the mods.d folder, not the actual modules location, which can be the same or some another. This last is defined in your mods.conf file or in the mods.d folder containing configuration files. A directory tree example could be the next:
+The "modules" attribute defines the directory containing mods.conf file or the mods.d folder, not the actual modules location, which can be the same or some another. This last is defined in your mods.conf file or in the mods.d folder containing configuration files. A directory tree example could be the next:
 
 - resources
     - mods.d  //The modules configuration files
