@@ -91,6 +91,7 @@ try
         console.log(result);
     });
 
+    /*
     bibleKJV.search('God', function(result){
     
         console.log(result);
@@ -110,6 +111,7 @@ try
     
         console.log(result);
     });
+    */
     
 }
 catch(e)
