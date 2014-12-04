@@ -1,22 +1,17 @@
 Node-Sword
 ======================
 
-Note: Node-sword is a port for scripturesOS.
+Node-Sword is a binding for the Sword API Engine which makes it possible to use it from your Node.js based project.
 
-Installing node-sword:
+## Setting up:
 
 ```sh
 $ npm install node-sword
 ```
 
-## Dependences
+Note: currentyl node-sword only works for Unix based systems 
 
-- Sword API Engine (http://www.crosswire.org/sword/docs/apiinstall.jsp)
-- pkg-config package (i.e. for Ubuntu/Debian sudo apt-get install pkg-config)
-
-Note: node-sword only works for Unix Systems 
-
-#How to configure sword
+# How to use
 
 ```js
 
