@@ -9,7 +9,7 @@ Node-Sword is a binding for the Sword API Engine which makes it possible to use 
 $ npm install node-sword
 ```
 
-Note: currentyl node-sword only works for Unix based systems 
+Note: currently node-sword only works for Unix based systems 
 
 # How to use
 
@@ -29,16 +29,16 @@ sword.configure({
 });
 
 ```
-The "modules" attribute defines the directory containing mods.conf file or the mods.d folder, not the actual modules location, which can be the same or some another. This last is defined in your mods.conf file or in the mods.d folder containing configuration files. A directory tree example could be the next:
+The "modules" attribute defines the directory containing the mods.conf file or the mods.d folder, not the actual modules location, which can be the same or some another. This last is defined in your mods.conf file or in the mods.d folder containing all configuration files. You may have either all configurations in a single file (mods.conf) or splited into multiple files inside a mods.d folder. Set up an example tree directory as the next one at your root project (same directory where you did run npm install):
 
 - resources
-    - mods.d  //The modules configuration files
-    - modules //The modules themselves
-    - locales //The locale files
+    - mods.d  // Contains the modules configuration files
+    - modules // Contains the modules themselves
+    - locales // Contains the locale files
 
-Note *
- 
-It looks for modules in a configuration file in some of the following directories:
+As an example, let's download the [KJV bible module](http://www.crosswire.org/sword/servlet/SwordMod.Verify?modName=KJV&pkgType=raw) (find more from [here](http://www.crosswire.org/sword/modules/ModDisp.jsp?modType=Bibles)) and after unzip it, you'll have a folder KJV containing two folders: "mods.d" and "modules". Copy the kjv.conf file inside mods.d folder into resources/mods.d/ and then copy the "texts" folder inside modules folder into resources/modules/
+
+(*) If you do not set a "modules" key in the sword.configure, then it looks by default for modules in a configuration file in some of the following directories:
 
     1) /etc/sword.conf
     2) /usr/local/etc/sword.conf
@@ -51,9 +51,8 @@ The configuration file must contain valuable information about the location of y
 
 In all cases, except for the first and second one, sword engine looks for a file with the name "mods.conf", or the files in the directory "mods.d". For instance, in the third case, it would look for: $HOME/.sword/mods.conf, $HOME/.sword/mods.d/*.conf
 
-More information on: http://www.crosswire.org/wiki/Main_Page
+More information [here](http://www.crosswire.org/wiki/Main_Page)
     
-End Note *
 
 #How to retrieve information
 
