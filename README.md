@@ -3,7 +3,7 @@ Node-Sword
 
 Node-Sword is a binding for the Sword API Engine which makes it possible to use it from your Node.js based project.
 
-## Setting up:
+## Setting up
 
 ```sh
 $ npm install node-sword
@@ -11,7 +11,7 @@ $ npm install node-sword
 
 Note: currently node-sword only works for Unix based systems 
 
-# How to use
+## How to use
 
 ```js
 
@@ -54,7 +54,7 @@ In all cases, except for the first and second one, sword engine looks for a file
 More information [here](http://www.crosswire.org/wiki/Main_Page)
     
 
-#How to retrieve information
+## How to retrieve information
 
 
 ```js
@@ -75,7 +75,7 @@ sword.info('locales', function(locales){
 
 ```
 
-#How to query sword modules
+## How to query sword modules
 
 
 ```js
