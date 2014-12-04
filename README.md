@@ -36,7 +36,7 @@ The "modules" attribute defines the directory containing the mods.conf file or t
     - modules // Contains the modules themselves
     - locales // Contains the locale files
 
-As an example, let's download the [KJV bible module](http://www.crosswire.org/sword/servlet/SwordMod.Verify?modName=KJV&pkgType=raw) (find more from [here](http://www.crosswire.org/sword/modules/ModDisp.jsp?modType=Bibles)) and after unzip it, you'll have a folder KJV containing two folders: "mods.d" and "modules". Copy the kjv.conf file inside mods.d folder into resources/mods.d/ and then copy the "texts" folder inside modules folder into resources/modules/
+As an example, let's download the [KJV bible module](http://www.crosswire.org/sword/servlet/SwordMod.Verify?modName=KJV&pkgType=raw) (find more from [here](http://www.crosswire.org/sword/modules/ModDisp.jsp?modType=Bibles)) and after unzip it, you'll have a folder KJV containing two folders: "mods.d" and "modules". Copy/Move the kjv.conf file inside mods.d folder into resources/mods.d/ and then copy the "texts" folder inside modules folder into resources/modules/
 
 (*) If you do not set a "modules" key in the sword.configure, then it looks by default for modules in a configuration file in some of the following directories:
 
@@ -81,34 +81,32 @@ sword.info('locales', function(locales){
 ```js
 
 var sword       = require('node-sword');
-var SWModule    = sword.module;
 
 try
 {
-    var bible_kjv       = new sword.module('KJV');
-    var bible_chincsv   = new SWModule('ChiNCVs');
+    var bibleKJV       = new sword.module('KJV');
 
-    bible_kjv.search('God', function(result){
+    bibleKJV.read('Genesis 1:1', {keys:false}, function(result){
     
         console.log(result);
     });
 
-    bible_kjv.read('Genesis 1,2,3', function(result){
+    bibleKJV.search('God', function(result){
     
         console.log(result);
     });
 
-    bible_kjv.read('Judges 1:1', {keys:true, locale:"es"}, function(result){
+    bibleKJV.read('Genesis 1,2,3', function(result){
     
         console.log(result);
     });
 
-    bible_kjv.read('Ex', function(result){
+    bibleKJV.read('Judges 1:1', {keys:true, locale:"es"}, function(result){
     
         console.log(result);
     });
 
-    bible_chincsv.read('Genesis 1:1', {keys:false}, function(result){
+    bibleKJV.read('Ex', function(result){
     
         console.log(result);
     });
