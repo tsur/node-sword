@@ -1,35 +1,44 @@
 {
-    "author": 
-    {
-        "name": "Tsur",
-        "email": "prucheta@gmail.com",
-        "url": "https://www.scripturesos.com/"
-    },
-    "name": "node-sword",
-    "version": "0.0.3-alpha",
-    "description": "Sword Engine(Crosswire) for NodeJS (C++ Addon)",
-    "keywords": [
-        "bible",
-        "node",
-        "c++",
-        "sword",
-        "crosswire"
-    ],
-    "main": "build/Release/sword.node",
-    "gypfile": true,
-    "repository": 
-    {
-      "type": "git",
-      "url": "https://github.com/tsur/node-sword.git"
-    },
-    "devDependencies": 
-    {
-        "mocha": "1.9.0",
-        "should": "1.2.2"
-    },
-    "scripts": 
-    {
-        "install":"node-gyp configure build",
-        "test": "make test"
-    }
+  "author": {
+    "name": "Tsur",
+    "email": "zurisadai.pabon@gmail.com",
+    "url": "https://www.scripturesos.com/"
+  },
+  "name": "node-sword",
+  "version": "0.0.4-alpha",
+  "description": "Sword Engine(Crosswire) for NodeJS (C++ Addon)",
+  "keywords": [
+    "bible",
+    "node",
+    "c++",
+    "sword",
+    "crosswire"
+  ],
+  "os": ["linux"],
+  "cpu": ["x64", "ia32"],
+  "main": "sword.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tsur/node-sword.git"
+  },
+  "binary": {
+    "module_name": "sword",
+    "module_path": "./compiled/{configuration}/{platform}-{arch}/",
+    "remote_path": "./{module_name}/{configuration}/",
+    "package_name": "{module_name}-{platform}-{arch}.tar.gz",
+    "host": ""
+  },
+  "dependencies": {
+    "node-pre-gyp": "0.5.x"
+  },
+  "devDependencies": {
+    "mocha": "1.9.0",
+    "should": "1.2.2"
+  },
+  "bundledDependencies": ["node-pre-gyp"],
+  "scripts": {
+    "install": "node-pre-gyp install --fallback-to-build",
+    "test": "make test",
+    "prepublish": "npm ls"
+  }
 }
