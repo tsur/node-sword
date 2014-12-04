@@ -1,7 +1,5 @@
 node_modules
 build
 resources
-src/backup
-src/backup2
-src/backup3
+src/backup*
 output
