@@ -38,7 +38,6 @@
   "bundledDependencies": ["node-pre-gyp"],
   "scripts": {
     "install": "node-pre-gyp install --fallback-to-build",
-    "test": "make test",
     "prepublish": "npm ls"
   }
 }
