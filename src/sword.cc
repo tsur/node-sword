@@ -1,16 +1,17 @@
-#define BUILDING_NODE_EXTENSION
 #include <node.h>
 #include "swordHandler.h"
 #include "swordModule.h"
 
-using namespace v8;
+namespace nsword {
 
-extern "C" {
-	
-	void InitAll(Handle<Object> exports) {
-	  SwordHandler::Init(exports);
-	  SwordModule::Init(exports);
-	}
+using v8::Handle;
+using v8::Object;
 
-	NODE_MODULE(sword, InitAll)
+void InitAll(Handle<Object> exports) {
+	SwordHandler::Init(exports);
+	SwordModule::Init(exports);
 }
+
+NODE_MODULE(sword, InitAll)
+
+}  // namespace nsword

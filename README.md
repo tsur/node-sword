@@ -3,13 +3,17 @@ Node-Sword
 
 Node-Sword is a binding for the Sword API Engine which makes it possible to use it from your Node.js based project.
 
+## Dependences
+
+Node-sword depends on crosswire sword project which in turns depends on libz, libclucene and libicu
+
 ## Setting up
 
 ```sh
 $ npm install node-sword
 ```
 
-Note: currently node-sword only works for Unix based systems 
+Note: currently node-sword only works for Unix based systems
 
 ## How to use
 
@@ -25,7 +29,7 @@ sword.configure({
     'format'    : sword.FORMAT_RTF,                 /* default: sword.FORMAT_PLAIN */
     //Directory containing locale files
     'locales'   : __dirname+'/resources/locales'    /* default: /usr/share/sword/locales.d */
-    
+
 });
 
 ```
@@ -52,7 +56,7 @@ The configuration file must contain valuable information about the location of y
 In all cases, except for the first and second one, sword engine looks for a file with the name "mods.conf", or the files in the directory "mods.d". For instance, in the third case, it would look for: $HOME/.sword/mods.conf, $HOME/.sword/mods.d/*.conf
 
 More information [here](http://www.crosswire.org/wiki/Main_Page)
-    
+
 
 ## How to retrieve information
 
@@ -64,13 +68,13 @@ var sword = require('node-sword');
 sword.info('modules', function(modules){
 
     console.log(modules);
-    
+
 });
 
 sword.info('locales', function(locales){
 
     console.log(locales);
-    
+
 });
 
 ```
@@ -87,32 +91,30 @@ try
     var bibleKJV       = new sword.module('KJV');
 
     bibleKJV.read('Genesis 1:1', {keys:false}, function(result){
-    
+
         console.log(result);
     });
 
-    /*
     bibleKJV.search('God', function(result){
-    
+
         console.log(result);
     });
 
     bibleKJV.read('Genesis 1,2,3', function(result){
-    
+
         console.log(result);
     });
 
     bibleKJV.read('Judges 1:1', {keys:true, locale:"es"}, function(result){
-    
+
         console.log(result);
     });
 
     bibleKJV.read('Ex', function(result){
-    
+
         console.log(result);
     });
-    */
-    
+
 }
 catch(e)
 {
@@ -124,7 +126,7 @@ catch(e)
 
 ## Tests
 
-In order to run the tests, first install dependences and then just run "make test" or "npm test" 
+In order to run the tests, first install dependences and then just run "make test" or "npm test"
 
 ```sh
 $ npm install

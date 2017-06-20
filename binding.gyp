@@ -1,10 +1,11 @@
 {
-  "targets": 
+  "targets":
   [{
       "target_name": "<(module_name)",
       "sources": [ "src/sword.cc", "src/swordHandler.cc", "src/swordModule.cc"],
       "include_dirs": ["/usr/include/sword"],
       "cflags": ["<!(pkg-config --cflags sword)"],
+      "ldflags": ["-Wl,-rpath,'$$ORIGIN'"],
       'libraries': ["<!(pkg-config --libs sword)"]
   }, {
       "target_name": "action_after_build",

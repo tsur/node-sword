@@ -5,7 +5,7 @@
     "url": "https://www.scripturesos.com/"
   },
   "name": "node-sword",
-  "version": "0.0.1-beta",
+  "version": "0.0.1",
   "description": "Sword Engine(Crosswire) for NodeJS (C++ Addon)",
   "keywords": [
     "bible",
@@ -29,7 +29,7 @@
     "host": ""
   },
   "dependencies": {
-    "node-pre-gyp": "0.5.x"
+    "node-pre-gyp": "^0.6.36"
   },
   "devDependencies": {
     "mocha": "1.9.0",
@@ -37,7 +37,12 @@
   },
   "bundledDependencies": ["node-pre-gyp"],
   "scripts": {
+    "start": "scripts/compile_sources.sh && npm install -g node-gyp && npm install",
     "install": "node-pre-gyp install --fallback-to-build",
-    "prepublish": "npm ls"
+    "prepublish": "npm ls",
+    "build": "node-pre-gyp clean configure build",
+    "build:linux-x64": "npm run build && npm run copy-so",
+    "copy-so": "cp /usr/lib/libsword-1.7.900.so compiled/Release/linux-x64 && cp /usr/lib/x86_64-linux-gnu/libclucene-core.so.1 compiled/Release/linux-x64",
+    "package": "npm pack . && mv $npm_package_name-$npm_package_version.tgz examples"
   }
 }

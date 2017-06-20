@@ -2,22 +2,31 @@
 #define SWORDHANDLER_H
 
 #include <node.h>
-//Sword dependences
+#include <node_object_wrap.h>
 #include <swmgr.h>
 
-class SwordHandler //: public node::ObjectWrap 
-{
+namespace nsword {
+
+  using v8::Handle;
+  using v8::Object;
+  using v8::FunctionCallbackInfo;
+  using v8::Value;
+  using v8::Function;
+  using v8::Persistent;
+
+  class SwordHandler: public node::ObjectWrap {
 
     public:
-    static void Init(v8::Handle<v8::Object> exports);
-    static sword::SWMgr* manager;
-    
-    private:
-    SwordHandler();
-    ~SwordHandler();
+      SwordHandler();
+      ~SwordHandler();
+      static sword::SWMgr* manager;
+      static void Init(Handle<Object> exports);
 
-    static v8::Handle<v8::Value> Configure(const v8::Arguments& args);
-    static v8::Handle<v8::Value> Info(const v8::Arguments& args);
-};
+    private:
+      static void Configure(const FunctionCallbackInfo<Value>& args);
+      static void Info(const FunctionCallbackInfo<Value>& args);
+
+  };
+}
 
 #endif

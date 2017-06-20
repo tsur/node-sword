@@ -1,28 +1,30 @@
 #ifndef NODE_SWORD_SRC_MACROS_H
 #define NODE_SWORD_SRC_MACROS_H
 
-#define REQUIRE_ARGUMENT_FUNCTION(i, var)                                      \
+#define REQUIRE_ARGUMENT_FUNCTION(i, var, isolate)                             \
     if (args.Length() <= (i) || !args[i]->IsFunction()) {                      \
-        return ThrowException(Exception::TypeError(                            \
-            String::New("Argument " #i " must be a function"))                 \
-        );                                                                     \
+      isolate->ThrowException(Exception::TypeError(                            \
+          String::NewFromUtf8(isolate, "Argument " #i " must be a function"))  \
+      );                                                                       \
+      return;                                                                  \
     }                                                                          \
-    Local<Function> var = Local<Function>::Cast(args[i]);
+    Local<Function> var = Local<Function>::Cast(args[i]);                      \
 
-
-#define REQUIRE_ARGUMENT_STRING(i, var)                                        \
+#define REQUIRE_ARGUMENT_STRING(i, var, isolate)                               \
     if (args.Length() <= (i) || !args[i]->IsString()) {                        \
-        return ThrowException(Exception::TypeError(                            \
-            String::New("Argument " #i " must be a string"))                   \
-        );                                                                     \
+      isolate->ThrowException(Exception::TypeError(                            \
+          String::NewFromUtf8(isolate, "Argument " #i " must be a string"))    \
+      );                                                                       \
+      return;                                                                  \
     }                                                                          \
     String::Utf8Value var(args[i]->ToString());
 
-#define REQUIRE_ARGUMENT_OBJECT(i, var)                                        \
+#define REQUIRE_ARGUMENT_OBJECT(i, var, isolate)                               \
     if (args.Length() <= (i) || !args[i]->IsObject()) {                        \
-        return ThrowException(Exception::TypeError(                            \
-            String::New("Argument " #i " must be an object"))                   \
+        isolate->ThrowException(Exception::TypeError(                          \
+            String::NewFromUtf8(isolate, "Argument " #i " must be an object")) \
         );                                                                     \
+        return;                                                                \
     }                                                                          \
     Local<Object> var = Local<Object>::Cast(args[i]);
 
@@ -32,5 +34,4 @@
     if (try_catch.HasCaught()) {                                               \
         Exception(try_catch);                                                  \
     }                                                                          }
-
 #endif

@@ -1,8 +1,14 @@
 node_modules
 build
 resources
+modules
+scripts
+src
+Dockerfile
+Makefile
 test
 src/backup*
+examples/node-sword*
 *.tgz
 npm-debug.log
 .npmignore
